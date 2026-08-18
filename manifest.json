@@ -2,7 +2,7 @@
   "name": "CH Mat — Studio Naturalizzazione",
   "short_name": "CH Mat",
   "description": "App di studio per l'esame di naturalizzazione svizzera: flashcard, test dei capitoli e ortografia.",
-  "start_url": "/index.html",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

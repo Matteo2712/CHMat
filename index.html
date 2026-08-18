@@ -325,18 +325,16 @@
 
   <!-- ORTOGRAFIA -->
   <section class="view" id="view-spell">
-    <h2 class="section-title">Come si scrive?</h2>
     <div id="spell-scope-wrap" style="margin-bottom:10px; display:none;">
-      <label style="font-size:12px; color:var(--text-dim); display:block; margin-bottom:4px;">Ambito:</label>
       <select id="spell-scope-select" onchange="onSpellScopeChange()"
         style="width:100%; background:var(--bg); border:1px solid var(--line); border-radius:10px; color:var(--text); font-size:14px; padding:10px 12px; font-family:inherit;">
       </select>
     </div>
     <div class="card">
-      <div style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:8px;">
-        <div id="spell-score" style="font-size:12.5px; font-weight:700; color:var(--green); white-space:nowrap;"></div>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+        <div class="quiz-q" id="spell-hint" style="flex:1; margin:0;">—</div>
+        <div id="spell-score" style="font-size:12.5px; font-weight:700; color:var(--green); white-space:nowrap; flex-shrink:0; padding-top:2px;"></div>
       </div>
-      <div class="quiz-q" id="spell-hint">—</div>
       <div id="spell-note" style="font-size:12.5px; color:var(--amber); margin-top:4px; display:none;"></div>
       <input type="text" id="spell-input" autocomplete="off" autocapitalize="off" spellcheck="false"
         placeholder="Scrivi qui la parola in tedesco..."
