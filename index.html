@@ -1,0 +1,1994 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#d52b1e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CH Mat">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<title>CH Mat — Studio Naturalizzazione</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --bg:#0d0f10;
+    --bg-elev:#17191b;
+    --line:#2a2d2f;
+    --text:#f2f0ea;
+    --text-dim:#9a9d9f;
+    --red:#d52b1e;
+    --red-dim:#5c1a15;
+    --green:#3fae5c;
+    --amber:#e0a52c;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,Roboto,"Segoe UI",sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:90px;
+  }
+  header{
+    padding:20px 18px 14px; border-bottom:1px solid var(--line);
+    position:sticky; top:0; background:var(--bg); z-index:10;
+  }
+  header h1{ font-size:19px; margin:0 0 2px; letter-spacing:.3px; font-weight:700; }
+  header .sub{ color:var(--text-dim); font-size:13px; }
+  .stripe{ height:4px; background:linear-gradient(90deg,var(--red) 0 50%, var(--text) 50% 100%); opacity:.85;}
+
+  main{ padding:16px; max-width:640px; margin:0 auto; }
+
+  nav.tabbar{
+    position:fixed; bottom:0; left:0; right:0;
+    display:grid; grid-template-columns:repeat(4,1fr);
+    background:var(--bg-elev); border-top:1px solid var(--line);
+    padding:6px 0 max(6px, env(safe-area-inset-bottom));
+    z-index:20;
+  }
+  nav.tabbar button{
+    background:none; border:none; color:var(--text-dim);
+    font-size:11px; padding:8px 2px 4px; display:flex; flex-direction:column;
+    align-items:center; gap:4px; font-family:inherit;
+  }
+  nav.tabbar button .ic{ font-size:20px; }
+  nav.tabbar button.active{ color:var(--red); }
+
+  section.view{ display:none; }
+  section.view.active{ display:block; }
+
+  .card{
+    background:var(--bg-elev); border:1px solid var(--line);
+    border-radius:var(--radius); padding:16px; margin-bottom:12px;
+  }
+
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .stat{ text-align:center; }
+  .stat .num{ font-size:26px; font-weight:800; }
+  .stat .lbl{ font-size:12px; color:var(--text-dim); margin-top:2px; }
+
+  button.primary{
+    background:var(--red); color:#fff; border:none; border-radius:10px;
+    padding:13px; font-size:15px; font-weight:700; width:100%;
+    font-family:inherit;
+  }
+  button.ghost{
+    background:none; border:1px solid var(--line); color:var(--text);
+    border-radius:10px; padding:12px; font-size:14px; width:100%; font-family:inherit;
+  }
+  button.secondary{
+    background:var(--bg-elev); border:1px solid var(--red); color:var(--red);
+    border-radius:10px; padding:12px; font-size:14px; width:100%; font-family:inherit; font-weight:700;
+  }
+
+  /* ===== CAPITOLI ===== */
+  .chapter-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 4px; border-bottom:1px solid var(--line); cursor:pointer;
+  }
+  .chapter-row:last-child{ border-bottom:none; }
+  .chapter-num{
+    width:30px; height:30px; border-radius:50%; background:var(--red-dim); color:#ff8a80;
+    display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; flex-shrink:0;
+  }
+  .chapter-info{ flex:1; padding:0 12px; }
+  .chapter-title-it{ font-weight:700; font-size:14.5px; }
+  .chapter-title-de{ color:var(--text-dim); font-size:12px; margin-top:1px; }
+  .chapter-meta{ font-size:11.5px; color:var(--text-dim); margin-top:3px; }
+  .chapter-score{ font-size:12px; font-weight:700; padding:3px 9px; border-radius:20px; white-space:nowrap; }
+  .chapter-score.none{ background:var(--line); color:var(--text-dim); }
+  .chapter-score.pass{ background:#123324; color:var(--green); }
+  .chapter-score.fail{ background:var(--red-dim); color:#ff8a80; }
+
+  .back-link{ color:var(--text-dim); font-size:13px; margin-bottom:12px; display:inline-block; }
+
+  /* lezione — testo continuo, stile manuale */
+  .lesson-group{ margin-bottom:24px; }
+  .lesson-group h3{
+    font-size:13px; text-transform:uppercase; letter-spacing:.5px; color:var(--red);
+    margin:0 0 10px; padding-bottom:6px; border-bottom:1px solid var(--line);
+  }
+  .lesson-para-de{
+    font-size:15px; font-weight:500; line-height:1.65; margin:0 0 8px;
+  }
+  .lesson-para-it{
+    font-size:13.5px; color:var(--text-dim); line-height:1.6; margin:0;
+    padding-left:12px; border-left:2px solid var(--line);
+  }
+
+  /* quiz / test */
+  .quiz-q{ font-size:17px; font-weight:600; margin-bottom:6px; line-height:1.4; }
+  .txt-it{ font-size:13.5px; color:var(--text-dim); margin-bottom:14px; }
+  .quiz-opt{
+    display:block; width:100%; text-align:left; background:var(--bg-elev);
+    border:1px solid var(--line); border-radius:10px; padding:13px 14px;
+    margin-bottom:9px; font-size:14.5px; color:var(--text); font-family:inherit;
+  }
+  .quiz-opt.correct{ border-color:var(--green); background:#0f2a1c; }
+  .quiz-opt.wrong{ border-color:var(--red); background:#2a1210; }
+  .test-progress{ width:100%; height:5px; background:var(--line); border-radius:3px; overflow:hidden; margin-bottom:14px; }
+  .test-progress > div{ height:100%; background:var(--red); }
+
+  .result-big{ text-align:center; padding:10px 0 4px; }
+  .result-big .pct{ font-size:44px; font-weight:800; }
+  .result-big .lbl{ color:var(--text-dim); font-size:13px; }
+  .wrong-item{ background:var(--bg-elev); border:1px solid var(--red-dim); border-radius:10px; padding:12px 14px; margin-bottom:8px; }
+  .wrong-item .q{ font-size:13.5px; font-weight:600; }
+  .wrong-item .a{ font-size:12.5px; color:var(--green); margin-top:4px; }
+  .wrong-item .ait{ font-size:12px; color:var(--text-dim); margin-top:2px; }
+
+  /* flashcard */
+  .fc-wrap{ display:flex; flex-direction:column; align-items:center; gap:16px; }
+  .fc-progress{ width:100%; height:5px; background:var(--line); border-radius:3px; overflow:hidden; }
+  .fc-progress > div{ height:100%; background:var(--red); }
+  .flashcard{
+    width:100%; min-height:220px; background:var(--bg-elev);
+    border:1px solid var(--line); border-radius:18px;
+    display:flex; align-items:center; justify-content:center;
+    padding:26px; text-align:center; position:relative;
+  }
+  .flashcard .tag{ position:absolute; top:12px; left:14px; font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.5px; }
+  .flashcard .lang-tag{ position:absolute; top:12px; right:14px; font-size:11px; font-weight:700; color:var(--red); }
+  .flashcard .txt{ font-size:19px; font-weight:600; line-height:1.4; }
+  .flashcard .txt-it-inline{ font-size:14px; color:var(--text-dim); margin-top:10px; font-weight:400; }
+  .fc-actions{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; width:100%; }
+  .fc-actions button{ border:none; border-radius:10px; padding:12px 4px; font-weight:700; font-size:13px; font-family:inherit; }
+  .fc-actions .again{ background:var(--red-dim); color:#ff8a80; }
+  .fc-actions .hard{ background:#3a2c12; color:var(--amber); }
+  .fc-actions .good{ background:#123324; color:var(--green); }
+
+  .empty{ text-align:center; color:var(--text-dim); padding:40px 20px; font-size:14px; }
+  h2.section-title{ font-size:15px; text-transform:uppercase; letter-spacing:.6px; color:var(--text-dim); margin:22px 0 10px; }
+</style>
+</head>
+<body>
+
+<!-- SCHERMATA DI ACCESSO (Supabase, email + password) -->
+<div id="auth-gate" style="display:none; position:fixed; inset:0; z-index:100; background:var(--bg); flex-direction:column; align-items:center; justify-content:center; padding:24px; overflow-y:auto;">
+  <div style="width:100%; max-width:360px; text-align:center;">
+    <div style="font-size:38px; margin-bottom:6px;">🇨🇭</div>
+    <h1 style="margin:0 0 6px;">CH Mat</h1>
+    <div style="color:var(--text-dim); font-size:13px; margin-bottom:20px;">Accedi per sincronizzare i tuoi progressi tra i tuoi dispositivi.</div>
+
+    <div style="display:flex; gap:8px; margin-bottom:16px;">
+      <button id="auth-tab-signin" class="good" style="flex:1;" onclick="setAuthMode('signin')">Accedi</button>
+      <button id="auth-tab-signup" class="ghost" style="flex:1;" onclick="setAuthMode('signup')">Registrati</button>
+    </div>
+
+    <input type="email" id="auth-email" placeholder="Email" autocomplete="email"
+      style="width:100%; background:var(--bg-elev); border:1px solid var(--line); border-radius:10px; color:var(--text); font-size:16px; padding:13px 14px; font-family:inherit; margin-bottom:10px;">
+    <input type="password" id="auth-password" placeholder="Password" autocomplete="current-password"
+      style="width:100%; background:var(--bg-elev); border:1px solid var(--line); border-radius:10px; color:var(--text); font-size:16px; padding:13px 14px; font-family:inherit; margin-bottom:10px;"
+      onkeydown="if(event.key==='Enter') submitAuth();">
+
+    <button id="auth-submit-btn" class="good" style="width:100%;" onclick="submitAuth()">Accedi</button>
+    <div style="margin-top:10px;">
+      <a href="#" onclick="sendPasswordReset(); return false;" style="color:var(--text-dim); font-size:12.5px;">Password dimenticata?</a>
+    </div>
+    <div id="auth-message" style="font-size:12.5px; color:var(--text-dim); margin-top:12px; min-height:16px;"></div>
+  </div>
+</div>
+
+<header>
+  <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+    <div>
+      <h1>Bürgertest</h1>
+      <div class="sub">Vorbereitung Einbürgerungsgespräch — Basel-Stadt</div>
+    </div>
+    <div style="text-align:right; font-size:11px; color:var(--text-dim); white-space:nowrap;">
+      <div id="auth-user-email" style="margin-bottom:4px;"></div>
+      <a href="#" onclick="signOut(); return false;" style="color:var(--text-dim);">Esci</a>
+    </div>
+  </div>
+</header>
+<div class="stripe"></div>
+
+<main>
+
+  <!-- HOME -->
+  <section class="view active" id="view-home">
+    <div class="card">
+      <div class="grid2">
+        <div class="stat"><div class="num" id="stat-chapters-done">0</div><div class="lbl">capitoli superati</div></div>
+        <div class="stat"><div class="num" id="stat-tot">0</div><div class="lbl">nozioni totali</div></div>
+      </div>
+    </div>
+
+    <button class="primary" onclick="switchTab('chapters')">Vai ai capitoli</button>
+
+    <h2 class="section-title">Ripasso libero</h2>
+    <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <div style="font-weight:600; font-size:14px;">Nuove flashcard al giorno</div>
+        <div style="color:var(--text-dim); font-size:12.5px;" id="daily-progress">0 / 6 introdotte oggi</div>
+      </div>
+      <input type="number" id="daily-limit-input" min="1" max="30" style="width:60px; background:var(--bg); border:1px solid var(--line); border-radius:8px; color:var(--text); font-size:16px; text-align:center; padding:8px 4px; font-family:inherit;" onchange="updateDailyLimit(this.value)">
+    </div>
+    <button class="ghost" onclick="startStudy()">Sessione mista di flashcard</button>
+  </section>
+
+  <!-- CAPITOLI: lista -->
+  <section class="view" id="view-chapters">
+    <h2 class="section-title">Capitoli</h2>
+    <div class="card" id="chapter-list"></div>
+  </section>
+
+  <!-- CAPITOLO: dettaglio -->
+  <section class="view" id="view-chapter-detail">
+    <a class="back-link" onclick="switchTab('chapters')">‹ Tutti i capitoli</a>
+    <div class="card">
+      <div id="chdetail-num" style="color:var(--red); font-weight:800; font-size:13px;"></div>
+      <div id="chdetail-title-it" style="font-size:19px; font-weight:700; margin-top:2px;"></div>
+      <div id="chdetail-title-de" style="color:var(--text-dim); font-size:14px; margin-top:2px;"></div>
+      <div id="chdetail-meta" style="color:var(--text-dim); font-size:12.5px; margin-top:10px;"></div>
+    </div>
+    <button class="primary" onclick="openLesson()">Studia la lezione</button>
+    <button class="secondary" style="margin-top:10px;" onclick="startChapterTest()">Test del capitolo (tutti i punti)</button>
+  </section>
+
+  <!-- LEZIONE -->
+  <section class="view" id="view-lesson">
+    <a class="back-link" id="lesson-back">‹ Capitolo</a>
+    <div id="lesson-content"></div>
+    <button class="secondary" onclick="startChapterTest()">Passa al test del capitolo</button>
+  </section>
+
+  <!-- TEST DEL CAPITOLO -->
+  <section class="view" id="view-test">
+    <div class="test-progress"><div id="test-progress-bar" style="width:0%"></div></div>
+    <div class="card">
+      <div class="quiz-q" id="test-question">—</div>
+      <div class="txt-it" id="test-question-it"></div>
+      <div id="test-options"></div>
+    </div>
+    <button class="ghost" onclick="switchTab('chapters')">Interrompi</button>
+  </section>
+
+  <!-- RISULTATI TEST -->
+  <section class="view" id="view-test-results">
+    <div class="card">
+      <div class="result-big">
+        <div class="pct" id="result-pct">0%</div>
+        <div class="lbl" id="result-lbl">0 su 0 corrette</div>
+      </div>
+    </div>
+    <div id="result-wrong-list"></div>
+    <button class="primary" onclick="startChapterTest()">Rifai il test</button>
+    <button class="ghost" style="margin-top:10px;" onclick="switchTab('chapters')">Torna ai capitoli</button>
+  </section>
+
+  <!-- FLASHCARD -->
+  <section class="view" id="view-flash">
+    <div class="fc-wrap">
+      <div id="flash-scope-wrap" style="margin-bottom:12px; display:none;">
+        <label style="font-size:12px; color:var(--text-dim); display:block; margin-bottom:4px;">Ambito:</label>
+        <select id="flash-scope-select" onchange="onFlashScopeChange()"
+          style="width:100%; background:var(--bg-elev); border:1px solid var(--line); border-radius:10px; color:var(--text); font-size:14px; padding:10px 12px; font-family:inherit;">
+        </select>
+      </div>
+      <div class="fc-progress"><div id="fc-progress-bar" style="width:0%"></div></div>
+      <div class="flashcard" id="flashcard" onclick="flipCard()">
+        <span class="tag" id="fc-tag">—</span>
+        <span class="lang-tag">DE</span>
+        <div>
+          <div class="txt" id="fc-front">—</div>
+          <div class="txt-it-inline" id="fc-back" style="display:none;"></div>
+        </div>
+      </div>
+      <div class="fc-actions" id="fc-actions" style="display:none;">
+        <button class="again" onclick="rateCard(1)">Ancora</button>
+        <button class="hard" onclick="rateCard(2)">Difficile</button>
+        <button class="good" onclick="rateCard(3)">Facile</button>
+      </div>
+      <button class="ghost" onclick="goHome()">Chiudi</button>
+    </div>
+  </section>
+
+  <!-- ORTOGRAFIA -->
+  <section class="view" id="view-spell">
+    <h2 class="section-title">Come si scrive?</h2>
+    <div id="spell-scope-wrap" style="margin-bottom:10px; display:none;">
+      <label style="font-size:12px; color:var(--text-dim); display:block; margin-bottom:4px;">Ambito:</label>
+      <select id="spell-scope-select" onchange="onSpellScopeChange()"
+        style="width:100%; background:var(--bg); border:1px solid var(--line); border-radius:10px; color:var(--text); font-size:14px; padding:10px 12px; font-family:inherit;">
+      </select>
+    </div>
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <div style="font-size:12px; color:var(--text-dim);">
+          Scrivi il <b>termine tedesco esatto</b> — non sempre coincide con la traduzione letterale.
+        </div>
+        <div id="spell-score" style="font-size:12.5px; font-weight:700; color:var(--green); white-space:nowrap; margin-left:10px;"></div>
+      </div>
+      <div class="quiz-q" id="spell-hint">—</div>
+      <div id="spell-note" style="font-size:12.5px; color:var(--amber); margin-top:4px; display:none;"></div>
+      <input type="text" id="spell-input" autocomplete="off" autocapitalize="off" spellcheck="false"
+        placeholder="Scrivi qui la parola in tedesco..."
+        style="width:100%; background:var(--bg); border:1px solid var(--line); border-radius:10px; color:var(--text); font-size:16px; padding:13px 14px; font-family:inherit; margin-bottom:10px; margin-top:8px;"
+        onkeydown="if(event.key==='Enter') spellCheck();">
+      <div id="spell-feedback" style="min-height:20px; font-size:13.5px; font-weight:700; margin-bottom:10px;"></div>
+      <div class="fc-actions" style="grid-template-columns:1fr 1fr;">
+        <button class="ghost" onclick="spellHelp()">Aiuto (mostra scelte)</button>
+        <button class="good" onclick="spellCheck()">Controlla</button>
+      </div>
+      <div id="spell-options" style="margin-top:12px;"></div>
+      <button id="spell-continue" class="good" onclick="loadSpellingQuestion()" style="display:none; width:100%; margin-top:12px;">Continua →</button>
+    </div>
+    <button class="ghost" onclick="goHome()">Chiudi</button>
+  </section>
+
+</main>
+
+<nav class="tabbar">
+  <button class="active" data-view="home" onclick="switchTab('home')"><span class="ic">⌂</span>Home</button>
+  <button data-view="chapters" onclick="switchTab('chapters')"><span class="ic">▤</span>Capitoli</button>
+  <button data-view="flash" onclick="switchTab('flash')"><span class="ic">◆</span>Flashcard</button>
+  <button data-view="spell" onclick="switchTab('spell')"><span class="ic">✎</span>Ortografia</button>
+</nav>
+
+<script>
+/* =========================================================
+   DATI: FLASHCARDS (fonte unica per lezioni, test e flashcard)
+   ========================================================= */
+const FLASHCARDS = [
+
+/* ===================== 1. GRUNDFAKTEN & SYMBOLE ===================== */
+{id:"gf001", tema:"Grundfakten", sottotema:"Gründung",
+ domanda_de:"Wann wurde die Eidgenossenschaft legendär gegründet, und wann entstand der moderne Bundesstaat?",
+ domanda_it:"Quando fu fondata leggendariamente la Confederazione, e quando nacque lo Stato federale moderno?",
+ risposta_de:"Legendär am 1. August 1291 durch den Bundesbrief (Rütlischwur); der moderne Bundesstaat entstand 1848.",
+ risposta_it:"Leggendariamente il 1° agosto 1291 con il Patto Federale (giuramento del Grütli); lo Stato federale moderno nacque nel 1848."},
+
+{id:"gf002", tema:"Grundfakten", sottotema:"Nationalfeiertag",
+ domanda_de:"Wann ist der Nationalfeiertag?",
+ domanda_it:"Quando si celebra la festa nazionale?",
+ risposta_de:"Der Nationalfeiertag der Schweiz wird am 1. August gefeiert.",
+ risposta_it:"La festa nazionale della Svizzera si celebra il 1° agosto."},
+
+{id:"gf003", tema:"Grundfakten", sottotema:"Wahlspruch",
+ domanda_de:"Wie lautet der Wahlspruch der Schweiz?",
+ domanda_it:"Qual è il motto della Svizzera?",
+ risposta_de:"Der Wahlspruch der Schweiz lautet Unus pro omnibus, omnes pro uno, auf Deutsch: Einer für alle, alle für einen.",
+ risposta_it:"Il motto della Svizzera è Unus pro omnibus, omnes pro uno, cioè Uno per tutti, tutti per uno."},
+
+{id:"gf004", tema:"Grundfakten", sottotema:"Symbole",
+ domanda_de:"Wie heisst die Nationalhymne, und wofür steht das Kürzel CH?",
+ domanda_it:"Come si chiama l'inno nazionale, e cosa significa la sigla CH?",
+ risposta_de:"Die Nationalhymne der Schweiz heisst Schweizerpsalm, und das Kürzel CH steht für Confoederatio Helvetica.",
+ risposta_it:"L'inno nazionale della Svizzera si chiama Schweizerpsalm (Salmo Svizzero), e la sigla CH sta per Confoederatio Helvetica."},
+
+{id:"gf005", tema:"Grundfakten", sottotema:"Amtssprachen",
+ domanda_de:"Welche vier Amtssprachen gibt es, und wie hoch ist ihr Anteil?",
+ domanda_it:"Quali sono le quattro lingue ufficiali e quale percentuale rappresentano?",
+ risposta_de:"Die Schweiz hat vier Amtssprachen: Deutsch (63,3%), Französisch (22,7%), Italienisch (8,1%) und Rätoromanisch (0,5%).",
+ risposta_it:"La Svizzera ha quattro lingue ufficiali: tedesco (63,3%), francese (22,7%), italiano (8,1%) e romancio (0,5%)."},
+
+{id:"gf006", tema:"Grundfakten", sottotema:"Geografie",
+ domanda_de:"Wie gross ist die Schweiz und an welche Länder grenzt sie?",
+ domanda_it:"Quanto è grande la Svizzera e con quali paesi confina?",
+ risposta_de:"Die Schweiz hat eine Fläche von 41'300 km² und grenzt im Norden an Deutschland, im Westen an Frankreich, im Süden an Italien, im Osten an Österreich und im Osten an das Fürstentum Liechtenstein.",
+ risposta_it:"La Svizzera ha una superficie di 41'300 km² e confina a nord con la Germania, a ovest con la Francia, a sud con l'Italia, a est con l'Austria e a est con il principato del Liechtenstein."},
+
+{id:"gf007", tema:"Grundfakten", sottotema:"Landschaften",
+ domanda_de:"In welche drei Hauptregionen ist die Schweiz unterteilt?",
+ domanda_it:"In quali tre regioni principali è suddivisa la Svizzera?",
+ risposta_de:"Die Schweiz ist in drei Hauptregionen unterteilt: Alpen (60%), Mittelland (30%) und Jura (10%).",
+ risposta_it:"La Svizzera è suddivisa in tre regioni principali: Alpi (60%), Altopiano/Mittelland (30%) e Giura (10%)."},
+
+{id:"gf008", tema:"Grundfakten", sottotema:"Gewässer",
+ domanda_de:"Warum wird die Schweiz „Wasserschloss Europas“ genannt, und welches ist der grösste See?",
+ domanda_it:"Perché la Svizzera è chiamata il \"castello d'acqua d'Europa\", e qual è il lago più grande?",
+ risposta_de:"Die Schweiz wird «Wasserschloss Europas» genannt, weil sie 6% der Süsswasserreserven Europas besitzt; der grösste See ist der Genfersee.",
+ risposta_it:"La Svizzera è chiamata il «castello d'acqua d'Europa» perché possiede il 6% delle riserve d'acqua dolce d'Europa; il lago più grande è il Lago Lemano (Ginevra)."},
+
+{id:"gf009", tema:"Grundfakten", sottotema:"Extrempunkte",
+ domanda_de:"Welches sind der höchste und der tiefste Punkt der Schweiz?",
+ domanda_it:"Quali sono il punto più alto e più basso della Svizzera?",
+ risposta_de:"Der höchste Punkt der Schweiz ist die Dufourspitze (4'634 m ü. M.) im Wallis, der tiefste Punkt liegt am Ufer des Lago Maggiore (193 m ü. M.) im Tessin.",
+ risposta_it:"Il punto più alto della Svizzera è la Dufourspitze (4'634 m) nel Vallese, il punto più basso si trova sulla riva del Lago Maggiore (193 m) in Ticino."},
+
+/* ===================== 2. GESCHICHTE ===================== */
+{id:"hist001", tema:"Geschichte", sottotema:"Antike",
+ domanda_de:"Was geschah 52 v. Chr. und 374 n. Chr.?",
+ domanda_it:"Cosa accadde nel 52 a.C. e nel 374 d.C.?",
+ risposta_de:"Im Jahr 52 v. Chr. liessen sich die Römer in Augusta Raurica nieder, und im Jahr 374 n. Chr. wurde der Name Basilia zum ersten Mal erwähnt.",
+ risposta_it:"Nel 52 a.C. i Romani si insediarono ad Augusta Raurica, e nel 374 d.C. il nome Basilia fu menzionato per la prima volta."},
+
+{id:"hist002", tema:"Geschichte", sottotema:"Mittelalter Basel",
+ domanda_de:"Wann wurde die Mittlere Rheinbrücke gebaut, und von wem?",
+ domanda_it:"Quando fu costruito il Ponte di Mezzo sul Reno, e da chi?",
+ risposta_de:"Die Mittlere Rheinbrücke wurde 1225/26 durch Heinrich von Thun erbaut.",
+ risposta_it:"Il Ponte di Mezzo sul Reno fu costruito nel 1225/26 da Heinrich von Thun."},
+
+{id:"hist003", tema:"Geschichte", sottotema:"Bundesbrief",
+ domanda_de:"Was geschah 1291 und zwischen welchen Kantonen?",
+ domanda_it:"Cosa accadde nel 1291 e tra quali cantoni?",
+ risposta_de:"Im Jahr 1291 entstand die Eidgenossenschaft legendär durch den Bundesbrief, auch Rütlischwur genannt, zwischen den Kantonen Uri, Schwyz und Unterwalden.",
+ risposta_it:"Nel 1291 nacque leggendariamente la Confederazione con il Patto Federale, chiamato anche giuramento del Grütli, tra i cantoni di Uri, Svitto e Untervaldo."},
+
+{id:"hist004", tema:"Geschichte", sottotema:"Morgarten",
+ domanda_de:"Was war 1315?",
+ domanda_it:"Cosa avvenne nel 1315?",
+ risposta_de:"1315 fand die Schlacht am Morgarten statt, die erste militärische Bestätigung des Bundes.",
+ risposta_it:"Nel 1315 ebbe luogo la battaglia del Morgarten, prima conferma militare della Confederazione."},
+
+{id:"hist005", tema:"Geschichte", sottotema:"Erdbeben",
+ domanda_de:"Was geschah 1356 in Basel?",
+ domanda_it:"Cosa accadde a Basilea nel 1356?",
+ risposta_de:"1356 zerstörte das Grosse Erdbeben fast die ganze Stadt Basel.",
+ risposta_it:"Nel 1356 il Grande Terremoto distrusse quasi tutta la città di Basilea."},
+
+{id:"hist006", tema:"Geschichte", sottotema:"Universität",
+ domanda_de:"Wann wurde die Universität Basel gegründet, und was ist besonders an ihr?",
+ domanda_it:"Quando fu fondata l'Università di Basilea, e cosa ha di particolare?",
+ risposta_de:"Die Universität Basel wurde 1460 gegründet und ist die älteste Hochschule der Schweiz.",
+ risposta_it:"L'Università di Basilea fu fondata nel 1460 ed è la più antica università della Svizzera."},
+
+{id:"hist007", tema:"Geschichte", sottotema:"Frieden zu Basel",
+ domanda_de:"Was wurde 1499 erreicht?",
+ domanda_it:"Cosa fu raggiunto nel 1499?",
+ risposta_de:"Im Jahr 1499 wurde nach dem Schwabenkrieg der Frieden zu Basel geschlossen, mit dem die Schweiz die faktische Unabhängigkeit vom Heiligen Römischen Reich erlangte.",
+ risposta_it:"Nel 1499, dopo la Guerra Sveva, fu firmata la Pace di Basilea, con cui la Svizzera ottenne l'indipendenza di fatto dal Sacro Romano Impero."},
+
+{id:"hist008", tema:"Geschichte", sottotema:"Beitritt Basel",
+ domanda_de:"Wann trat der Kanton Basel der Eidgenossenschaft bei?",
+ domanda_it:"Quando il cantone di Basilea entrò nella Confederazione?",
+ risposta_de:"Der Kanton Basel trat 1501 der Eidgenossenschaft bei.",
+ risposta_it:"Il cantone di Basilea entrò nella Confederazione nel 1501."},
+
+{id:"hist009", tema:"Geschichte", sottotema:"Marignano & Neutralität",
+ domanda_de:"Was geschah 1515 und welche Folge hatte es?",
+ domanda_it:"Cosa accadde nel 1515 e quale conseguenza ebbe?",
+ risposta_de:"Im Jahr 1515 fand die Schlacht bei Marignano statt, und nach dieser Niederlage begann die Schweiz, ihre Politik der Neutralität zu entwickeln.",
+ risposta_it:"Nel 1515 ebbe luogo la battaglia di Marignano, e dopo questa sconfitta la Svizzera iniziò a sviluppare la propria politica di neutralità."},
+
+{id:"hist010", tema:"Geschichte", sottotema:"Reformation",
+ domanda_de:"Wann wurde Basel protestantisch?",
+ domanda_it:"Quando Basilea divenne protestante?",
+ risposta_de:"Basel wurde 1529 durch die Reformation protestantisch.",
+ risposta_it:"Basilea divenne protestante nel 1529, con la Riforma."},
+
+{id:"hist011", tema:"Geschichte", sottotema:"Westfälischer Friede",
+ domanda_de:"Was geschah 1648?",
+ domanda_it:"Cosa accadde nel 1648?",
+ risposta_de:"Im Jahr 1648 wurde mit dem Westfälischen Frieden die Unabhängigkeit der Schweiz völkerrechtlich anerkannt.",
+ risposta_it:"Nel 1648, con la Pace di Westfalia, l'indipendenza della Svizzera fu riconosciuta a livello internazionale."},
+
+{id:"hist012", tema:"Geschichte", sottotema:"Helvetische Republik",
+ domanda_de:"Was geschah 1798?",
+ domanda_it:"Cosa accadde nel 1798?",
+ risposta_de:"1798 erfolgte die französische Invasion durch Napoleon und die Gründung der Helvetischen Republik, eines zentralistischen Einheitsstaates.",
+ risposta_it:"Nel 1798 ci fu l'invasione francese di Napoleone e la fondazione della Repubblica Elvetica, uno stato unitario centralista."},
+
+{id:"hist013", tema:"Geschichte", sottotema:"Mediationsakte",
+ domanda_de:"Was war die Mediationsakte von 1803?",
+ domanda_it:"Cos'era l'Atto di Mediazione del 1803?",
+ risposta_de:"Mit der Mediationsakte von 1803 stellte Napoleon die kantonale Souveränität teilweise wieder her, und die Schweiz wurde zu einem Staatenbund mit 19 Kantonen.",
+ risposta_it:"Con l'Atto di Mediazione del 1803, Napoleone ripristinò parzialmente la sovranità cantonale, e la Svizzera divenne una confederazione di 19 cantoni."},
+
+{id:"hist014", tema:"Geschichte", sottotema:"Wiener Kongress",
+ domanda_de:"Was wurde 1815 am Wiener Kongress festgelegt?",
+ domanda_it:"Cosa fu stabilito nel 1815 al Congresso di Vienna?",
+ risposta_de:"Am Wiener Kongress von 1815 wurde die heutige Grenze der Schweiz festgelegt und ihre immerwährende Neutralität international anerkannt; die Schweiz zählte nun 22 Kantone.",
+ risposta_it:"Al Congresso di Vienna del 1815 fu fissato il confine attuale della Svizzera e riconosciuta a livello internazionale la sua neutralità perpetua; la Svizzera contava ormai 22 cantoni."},
+
+{id:"hist015", tema:"Geschichte", sottotema:"Trennung BS/BL",
+ domanda_de:"Was geschah 1833?",
+ domanda_it:"Cosa accadde nel 1833?",
+ risposta_de:"Im Jahr 1833 erfolgte die Trennung des Kantons Basel in Basel-Stadt und Basel-Landschaft nach politischen Konflikten zwischen den beiden Landesteilen.",
+ risposta_it:"Nel 1833 avvenne la separazione del cantone di Basilea in Basilea Città e Basilea Campagna, dopo conflitti politici tra le due parti."},
+
+{id:"hist016", tema:"Geschichte", sottotema:"Sonderbundskrieg",
+ domanda_de:"Was war der Sonderbundskrieg von 1847?",
+ domanda_it:"Cos'era la Guerra del Sonderbund del 1847?",
+ risposta_de:"Der Sonderbundskrieg von 1847 war der letzte Bürgerkrieg zwischen liberalen und konservativen Kantonen.",
+ risposta_it:"La Guerra del Sonderbund del 1847 fu l'ultima guerra civile tra cantoni liberali e conservatori."},
+
+{id:"hist017", tema:"Geschichte", sottotema:"Bundesverfassung 1848",
+ domanda_de:"Was geschah 1848?",
+ domanda_it:"Cosa accadde nel 1848?",
+ risposta_de:"1848 entstand die erste Bundesverfassung und damit der moderne Bundesstaat.",
+ risposta_it:"Nel 1848 nacque la prima Costituzione federale e con essa lo Stato federale moderno."},
+
+{id:"hist018", tema:"Geschichte", sottotema:"Totalrevision 1874",
+ domanda_de:"Was brachte die erste Totalrevision der Bundesverfassung 1874?",
+ domanda_it:"Cosa portò la prima revisione totale della Costituzione federale nel 1874?",
+ risposta_de:"Die erste Totalrevision der Bundesverfassung von 1874 brachte den Ausbau der Volksrechte, insbesondere die Einführung des Referendums.",
+ risposta_it:"La prima revisione totale della Costituzione federale del 1874 portò l'ampliamento dei diritti popolari, in particolare l'introduzione del referendum."},
+
+{id:"hist019", tema:"Geschichte", sottotema:"Volksinitiative 1891",
+ domanda_de:"Wann wurde die Volksinitiative auf Bundesebene eingeführt?",
+ domanda_it:"Quando fu introdotta l'iniziativa popolare a livello federale?",
+ risposta_de:"Die Volksinitiative wurde 1891 auf Bundesebene eingeführt.",
+ risposta_it:"L'iniziativa popolare fu introdotta a livello federale nel 1891."},
+
+{id:"hist020", tema:"Geschichte", sottotema:"Zionistenkongress",
+ domanda_de:"Was fand 1897 in Basel statt?",
+ domanda_it:"Cosa si tenne a Basilea nel 1897?",
+ risposta_de:"1897 fand in Basel der erste Weltzionistenkongress unter Theodor Herzl statt.",
+ risposta_it:"Nel 1897 si tenne a Basilea il primo Congresso Sionista Mondiale, guidato da Theodor Herzl."},
+
+{id:"hist021", tema:"Geschichte", sottotema:"Proporzwahlrecht",
+ domanda_de:"Was wurde 1919 eingeführt?",
+ domanda_it:"Cosa fu introdotto nel 1919?",
+ risposta_de:"1919 wurde das Proporzwahlrecht für den Nationalrat eingeführt.",
+ risposta_it:"Nel 1919 fu introdotto il sistema elettorale proporzionale per il Consiglio Nazionale."},
+
+{id:"hist022", tema:"Geschichte", sottotema:"Frauenstimmrecht",
+ domanda_de:"Wann erhielten Frauen das Stimm- und Wahlrecht auf Bundesebene, und wann bereits in Basel-Stadt?",
+ domanda_it:"Quando le donne ottennero il diritto di voto a livello federale, e quando già a Basilea Città?",
+ risposta_de:"Die Frauen erhielten das Stimm- und Wahlrecht auf Bundesebene 1971, in Basel-Stadt bereits 1966 auf kantonaler Ebene.",
+ risposta_it:"Le donne ottennero il diritto di voto a livello federale nel 1971, mentre a Basilea Città lo avevano già ottenuto nel 1966 a livello cantonale."},
+
+{id:"hist023", tema:"Geschichte", sottotema:"Kanton Jura",
+ domanda_de:"Wann wurde der Kanton Jura gegründet, und der wievielte Kanton ist er?",
+ domanda_it:"Quando fu fondato il canton Giura, e come cantone numero quanti?",
+ risposta_de:"Der Kanton Jura wurde 1979 durch Trennung vom Kanton Bern gegründet und ist der 26. Kanton der Schweiz.",
+ risposta_it:"Il canton Giura fu fondato nel 1979 separandosi dal canton Berna ed è il 26° cantone della Svizzera."},
+
+{id:"hist024", tema:"Geschichte", sottotema:"Totalrevision 1999 & UNO",
+ domanda_de:"Was geschah 1999 und 2002?",
+ domanda_it:"Cosa accadde nel 1999 e nel 2002?",
+ risposta_de:"1999 fand die zweite Totalrevision der Bundesverfassung statt, und 2002 trat die Schweiz der UNO bei.",
+ risposta_it:"Nel 1999 ci fu la seconda revisione totale della Costituzione federale, e nel 2002 la Svizzera entrò nell'ONU."},
+
+/* ===================== 3. BUNDESRAT 2026 ===================== */
+{id:"br000", tema:"Bundesrat", sottotema:"Grundprinzip",
+ domanda_de:"Aus wie vielen Mitgliedern besteht der Bundesrat und nach welchem Prinzip entscheidet er?",
+ domanda_it:"Da quanti membri è composto il Consiglio Federale e secondo quale principio decide?",
+ risposta_de:"Der Bundesrat besteht aus 7 Mitgliedern, die nach dem Kollegialitätsprinzip gemeinsam entscheiden.",
+ risposta_it:"Il Consiglio Federale è composto da 7 membri, che decidono collegialmente secondo il principio di collegialità."},
+
+{id:"br001", tema:"Bundesrat", sottotema:"Parmelin",
+ domanda_de:"Wer ist Bundespräsident 2026 und welches Departement leitet er?",
+ domanda_it:"Chi è il Presidente della Confederazione nel 2026 e quale dipartimento dirige?",
+ risposta_de:"Guy Parmelin (SVP) ist Bundespräsident 2026 und Vorsteher des Departements für Wirtschaft, Bildung und Forschung (WBF).",
+ risposta_it:"Guy Parmelin (UDC) è il Presidente della Confederazione nel 2026 e dirige il Dipartimento dell'economia, della formazione e della ricerca (WBF)."},
+
+{id:"br002", tema:"Bundesrat", sottotema:"Cassis",
+ domanda_de:"Wer ist Vizepräsident 2026 und welches Departement leitet er?",
+ domanda_it:"Chi è il Vicepresidente nel 2026 e quale dipartimento dirige?",
+ risposta_de:"Ignazio Cassis (FDP) ist Vizepräsident 2026 und Vorsteher des Departements für auswärtige Angelegenheiten (EDA).",
+ risposta_it:"Ignazio Cassis (PLR) è il Vicepresidente nel 2026 e dirige il Dipartimento degli affari esteri (DFAE)."},
+
+{id:"br003", tema:"Bundesrat", sottotema:"Keller-Sutter",
+ domanda_de:"Welches Departement leitet Karin Keller-Sutter?",
+ domanda_it:"Quale dipartimento dirige Karin Keller-Sutter?",
+ risposta_de:"Karin Keller-Sutter (FDP) ist Vorsteherin des Finanzdepartements (EFD).",
+ risposta_it:"Karin Keller-Sutter (PLR) dirige il Dipartimento delle finanze (DFF)."},
+
+{id:"br004", tema:"Bundesrat", sottotema:"Rösti",
+ domanda_de:"Welches Departement leitet Albert Rösti?",
+ domanda_it:"Quale dipartimento dirige Albert Rösti?",
+ risposta_de:"Albert Rösti (SVP) ist Vorsteher des Departements für Umwelt, Verkehr, Energie und Kommunikation (UVEK).",
+ risposta_it:"Albert Rösti (UDC) dirige il Dipartimento dell'ambiente, dei trasporti, dell'energia e delle comunicazioni (DATEC)."},
+
+{id:"br005", tema:"Bundesrat", sottotema:"Baume-Schneider",
+ domanda_de:"Welches Departement leitet Elisabeth Baume-Schneider?",
+ domanda_it:"Quale dipartimento dirige Elisabeth Baume-Schneider?",
+ risposta_de:"Elisabeth Baume-Schneider (SP) ist Vorsteherin des Departements des Innern (EDI).",
+ risposta_it:"Elisabeth Baume-Schneider (PS) dirige il Dipartimento dell'interno (DFI)."},
+
+{id:"br006", tema:"Bundesrat", sottotema:"Jans",
+ domanda_de:"Welches Departement leitet Beat Jans?",
+ domanda_it:"Quale dipartimento dirige Beat Jans?",
+ risposta_de:"Beat Jans (SP) ist Vorsteher des Justiz- und Polizeidepartements (EJPD).",
+ risposta_it:"Beat Jans (PS) dirige il Dipartimento di giustizia e polizia (DFGP)."},
+
+{id:"br007", tema:"Bundesrat", sottotema:"Pfister",
+ domanda_de:"Welches Departement leitet Martin Pfister?",
+ domanda_it:"Quale dipartimento dirige Martin Pfister?",
+ risposta_de:"Martin Pfister (Die Mitte) ist Vorsteher des Departements für Verteidigung, Bevölkerungsschutz und Sport (VBS).",
+ risposta_it:"Martin Pfister (Die Mitte) dirige il Dipartimento della difesa, della protezione della popolazione e dello sport (DDPS)."},
+
+{id:"br008", tema:"Bundesrat", sottotema:"Bundeskanzler",
+ domanda_de:"Wer ist Bundeskanzler und was ist seine Funktion?",
+ domanda_it:"Chi è il Cancelliere della Confederazione e qual è la sua funzione?",
+ risposta_de:"Viktor Rossi (GLP), Bundeskanzler seit 1. Januar 2024, Stabschef des Bundesrates.",
+ risposta_it:"Viktor Rossi (PVL), Cancelliere della Confederazione dal 1° gennaio 2024, capo di stato maggiore del Consiglio Federale."},
+
+/* ===================== 4. KANTON BASEL-STADT ===================== */
+{id:"bs001", tema:"Basel-Stadt", sottotema:"Geografie",
+ domanda_de:"Wie gross ist der Kanton Basel-Stadt und aus welchen Gemeinden besteht er?",
+ domanda_it:"Quanto è grande il canton Basilea Città e da quali comuni è composto?",
+ risposta_de:"Der Kanton Basel-Stadt ist mit 37 km² der flächenkleinste Kanton der Schweiz und besteht aus den Gemeinden Basel, Riehen und Bettingen.",
+ risposta_it:"Il canton Basilea Città, con 37 km², è il cantone più piccolo della Svizzera per superficie e comprende i comuni di Basilea, Riehen e Bettingen."},
+
+{id:"bs002", tema:"Basel-Stadt", sottotema:"Extrempunkte",
+ domanda_de:"Welches sind der höchste und der tiefste Punkt von Basel-Stadt?",
+ domanda_it:"Quali sono il punto più alto e più basso di Basilea Città?",
+ risposta_de:"Der höchste Punkt von Basel-Stadt ist St. Chrischona in Bettingen (522 m ü. M.), wo sich das höchste freistehende Bauwerk der Schweiz befindet; der tiefste Punkt ist der Rheinhafen in Kleinhüningen (245 m ü. M.).",
+ risposta_it:"Il punto più alto di Basilea Città è St. Chrischona a Bettingen (522 m), dove si trova la costruzione autoportante più alta della Svizzera; il punto più basso è il porto sul Reno a Kleinhüningen (245 m)."},
+
+{id:"bs003", tema:"Basel-Stadt", sottotema:"Regierungsrat",
+ domanda_de:"Aus wie vielen Mitgliedern besteht der Regierungsrat von Basel-Stadt, und wer gehört ihm 2026 an?",
+ domanda_it:"Da quanti membri è composto il Governo di Basilea Città, e chi ne fa parte nel 2026?",
+ risposta_de:"Der Regierungsrat von Basel-Stadt besteht aus 7 Mitgliedern: Conradin Cramer (LDP), Lukas Engelberger (Die Mitte), Tanja Soland (SP), Stephanie Eymann (LDP), Kaspar Sutter (SP), Esther Keller (GLP) und Mustafa Atici (SP).",
+ risposta_it:"Il Regierungsrat di Basilea Città è composto da 7 membri: Conradin Cramer (LDP), Lukas Engelberger (Die Mitte), Tanja Soland (PS), Stephanie Eymann (LDP), Kaspar Sutter (PS), Esther Keller (PVL) e Mustafa Atici (PS)."},
+
+{id:"bs006", tema:"Basel-Stadt", sottotema:"Departementszuteilung",
+ domanda_de:"Welches Departement leitet jedes Mitglied des Regierungsrats, und wer ist Regierungspräsident?",
+ domanda_it:"Quale dipartimento dirige ciascun membro del Regierungsrat, e chi è il Presidente del Governo?",
+ risposta_de:"Conradin Cramer ist Regierungspräsident und leitet das Präsidialdepartement (PD); Esther Keller leitet das Bau- und Verkehrsdepartement (BVD); Mustafa Atici das Erziehungsdepartement (ED); Tanja Soland das Finanzdepartement (FD); Lukas Engelberger das Gesundheitsdepartement (GD); Stephanie Eymann das Justiz- und Sicherheitsdepartement (JSD); Kaspar Sutter das Departement für Wirtschaft, Soziales und Umwelt (WSU).",
+ risposta_it:"Conradin Cramer è il Presidente del Governo e dirige il Dipartimento presidenziale (PD); Esther Keller dirige il Dipartimento delle costruzioni e trasporti (BVD); Mustafa Atici il Dipartimento dell'istruzione (ED); Tanja Soland il Dipartimento delle finanze (FD); Lukas Engelberger il Dipartimento della salute (GD); Stephanie Eymann il Dipartimento di giustizia e sicurezza (JSD); Kaspar Sutter il Dipartimento degli affari economici, sociali e ambientali (WSU)."},
+
+{id:"bs004", tema:"Basel-Stadt", sottotema:"Grosser Rat",
+ domanda_de:"Wie viele Mitglieder hat der Grosse Rat, wie oft wird er gewählt, und wo tagt er?",
+ domanda_it:"Quanti membri ha il Gran Consiglio, ogni quanto viene eletto, e dove si riunisce?",
+ risposta_de:"Der Grosse Rat hat 100 Mitglieder, die alle 4 Jahre gewählt werden, und tagt im Rathaus am Marktplatz.",
+ risposta_it:"Il Gran Consiglio ha 100 membri, eletti ogni 4 anni, e si riunisce nel Municipio in piazza del mercato (Marktplatz)."},
+
+{id:"bs005", tema:"Basel-Stadt", sottotema:"Bürgergemeinde",
+ domanda_de:"Was ist die Bürgergemeinde und wofür ist sie zuständig?",
+ domanda_it:"Cos'è la Bürgergemeinde e di cosa si occupa?",
+ risposta_de:"Eine einflussreiche Institution in Basel, zuständig für Einbürgerungen, soziale Institutionen (Bürgerspital, Waisenhaus) und die Verwaltung von Forsten und Stiftungen (Christoph Merian Stiftung). Ihr Parlament ist der Bürgergemeinderat (40 Mitglieder).",
+ risposta_it:"Un'istituzione influente a Basilea, competente per le naturalizzazioni, le istituzioni sociali (ospedale civico, orfanotrofio) e la gestione di boschi e fondazioni (Fondazione Christoph Merian). Il suo parlamento è il Bürgergemeinderat (40 membri)."},
+
+/* ===================== 5. POLITISCHES SYSTEM UND VOLKSRECHTE ===================== */
+{id:"sys001", tema:"Volksrechte", sottotema:"Föderalismus",
+ domanda_de:"Aus welchen drei Ebenen besteht der föderalistische Staat, und was bedeutet Subsidiarität?",
+ domanda_it:"Da quali tre livelli è composto lo stato federale, e cosa significa sussidiarietà?",
+ risposta_de:"Der föderalistische Staat besteht aus drei Ebenen: Bund, Kantone und Gemeinden. Das Subsidiaritätsprinzip bedeutet, dass der Bund nur Aufgaben übernimmt, welche die Kantone nicht selbst bewältigen können.",
+ risposta_it:"Lo stato federale è composto da tre livelli: Confederazione, Cantoni e Comuni. Il principio di sussidiarietà significa che la Confederazione assume solo i compiti che i Cantoni non possono svolgere da soli."},
+
+{id:"sys002", tema:"Volksrechte", sottotema:"Milizsystem",
+ domanda_de:"Was bedeutet das Milizsystem?",
+ domanda_it:"Cosa significa il sistema di milizia?",
+ risposta_de:"Die meisten Parlamentarier üben die Politik nebenberuflich aus.",
+ risposta_it:"La maggior parte dei parlamentari esercita la politica come attività accessoria, non a tempo pieno."},
+
+{id:"sys003", tema:"Volksrechte", sottotema:"Volksinitiative",
+ domanda_de:"Was braucht es für eine Volksinitiative?",
+ domanda_it:"Cosa serve per un'iniziativa popolare?",
+ risposta_de:"Für eine Volksinitiative braucht es 100'000 gültige Unterschriften innerhalb von 18 Monaten, um eine Verfassungsänderung vorzuschlagen.",
+ risposta_it:"Per un'iniziativa popolare servono 100'000 firme valide entro 18 mesi, per proporre una modifica della Costituzione."},
+
+{id:"sys004", tema:"Volksrechte", sottotema:"Referendum",
+ domanda_de:"Was braucht es für ein fakultatives Referendum?",
+ domanda_it:"Cosa serve per un referendum facoltativo?",
+ risposta_de:"Für ein fakultatives Referendum braucht es 50'000 Unterschriften innerhalb von 100 Tagen, um über ein vom Parlament beschlossenes Gesetz abzustimmen.",
+ risposta_it:"Per un referendum facoltativo servono 50'000 firme entro 100 giorni, per votare su una legge approvata dal Parlamento."},
+
+{id:"sys005", tema:"Volksrechte", sottotema:"Nationalrat",
+ domanda_de:"Wie viele Mitglieder hat der Nationalrat, wen vertritt er, und wie viele Sitze hat Basel-Stadt?",
+ domanda_it:"Quanti membri ha il Consiglio Nazionale, chi rappresenta, e quanti seggi ha Basilea Città?",
+ risposta_de:"Der Nationalrat hat 200 Mitglieder und repräsentiert das Volk; Basel-Stadt hat 4 Sitze (seit den Wahlen 2023, zuvor 5).",
+ risposta_it:"Il Consiglio Nazionale ha 200 membri e rappresenta il popolo; Basilea Città ha 4 seggi (dalle elezioni 2023, prima erano 5)."},
+
+{id:"sys008", tema:"Volksrechte", sottotema:"Parlamentari BS",
+ domanda_de:"Wer vertritt Basel-Stadt im Nationalrat und im Ständerat?",
+ domanda_it:"Chi rappresenta Basilea Città al Consiglio Nazionale e al Consiglio degli Stati?",
+ risposta_de:"Basel-Stadt wird im Nationalrat von 4 Personen vertreten: Sarah Wyss (SP), Sibel Arslan (BastA! / Grüne), Patricia von Falkenstein (LDP) und Katja Christ (GLP); im Ständerat vertritt Eva Herzog (SP) den Kanton.",
+ risposta_it:"Basilea Città è rappresentata al Consiglio Nazionale da 4 persone: Sarah Wyss (PS), Sibel Arslan (BastA! / Grüne), Patricia von Falkenstein (LDP) e Katja Christ (PVL); al Consiglio degli Stati il cantone è rappresentato da Eva Herzog (PS)."},
+
+{id:"sys009", tema:"Volksrechte", sottotema:"Petizione",
+ domanda_de:"Was ist eine Petition?",
+ domanda_it:"Cos'è una petizione?",
+ risposta_de:"Jede Person hat das Recht, bei jeder Behörde eine Petition einzureichen.",
+ risposta_it:"Ogni persona ha il diritto di presentare una petizione a qualsiasi autorità."},
+
+{id:"sys010", tema:"Volksrechte", sottotema:"Firme cantonali/comunali",
+ domanda_de:"Wie viele Unterschriften braucht es für eine Initiative bzw. ein Referendum auf kantonaler und auf Gemeindeebene (Basel-Stadt)?",
+ domanda_it:"Quante firme servono per un'iniziativa o un referendum a livello cantonale e comunale (Basel-Stadt)?",
+ risposta_de:"Für eine kantonale Initiative braucht es 3'000 Unterschriften, für eine Gemeinde-Initiative 2'000; für ein kantonales Referendum braucht es 2'000 Unterschriften, für ein Gemeinde-Referendum 1'000.",
+ risposta_it:"Per un'iniziativa cantonale servono 3'000 firme, per un'iniziativa comunale 2'000; per un referendum cantonale servono 2'000 firme, per un referendum comunale 1'000."},
+
+{id:"sys011", tema:"Volksrechte", sottotema:"Assemblea Federale Unita",
+ domanda_de:"Was ist die Vereinigte Bundesversammlung und was wählt sie?",
+ domanda_it:"Cos'è l'Assemblea Federale Unita e cosa elegge?",
+ risposta_de:"Die Vereinigte Bundesversammlung besteht aus Nationalrat und Ständerat gemeinsam (246 Mitglieder) und wählt den Bundesrat, die Bundesrichter, den Bundeskanzler sowie im Kriegsfall den General.",
+ risposta_it:"L'Assemblea Federale Unita è composta da Consiglio Nazionale e Consiglio degli Stati insieme (246 membri) ed elegge il Consiglio Federale, i giudici federali, il Cancelliere e, in caso di guerra, il Generale."},
+
+{id:"sys012", tema:"Volksrechte", sottotema:"Tribunali federali",
+ domanda_de:"Welche eidgenössischen Gerichte gibt es und wer wählt die Richter?",
+ domanda_it:"Quali tribunali federali esistono e chi elegge i giudici?",
+ risposta_de:"Zu den eidgenössischen Gerichten gehören das Bundesgericht (Lausanne), das Bundesversicherungsgericht (Luzern), das Bundesstrafgericht (Bellinzona) und das Bundesverwaltungsgericht (St. Gallen); ihre Richter werden von der Vereinigten Bundesversammlung gewählt.",
+ risposta_it:"I tribunali federali sono il Tribunale federale (Losanna), il Tribunale federale delle assicurazioni (Lucerna), il Tribunale penale federale (Bellinzona) e il Tribunale amministrativo federale (San Gallo); i loro giudici sono eletti dall'Assemblea Federale Unita."},
+
+{id:"sys006", tema:"Volksrechte", sottotema:"Ständerat",
+ domanda_de:"Wie viele Mitglieder hat der Ständerat, wen vertritt er, und wie viele Sitze hat Basel-Stadt?",
+ domanda_it:"Quanti membri ha il Consiglio degli Stati, chi rappresenta, e quanti seggi ha Basilea Città?",
+ risposta_de:"Der Ständerat hat 46 Mitglieder und repräsentiert die Kantone; Basel-Stadt entsendet als Halbkanton 1 Mitglied.",
+ risposta_it:"Il Consiglio degli Stati ha 46 membri e rappresenta i Cantoni; Basilea Città, come semicantone, ne invia 1."},
+
+{id:"sys007", tema:"Volksrechte", sottotema:"Bundesversammlung",
+ domanda_de:"Wie heisst das gesamte Parlament der Schweiz und aus welchen zwei Kammern besteht es?",
+ domanda_it:"Come si chiama il parlamento svizzero nel suo complesso e da quali due camere è composto?",
+ risposta_de:"Die Bundesversammlung; sie besteht aus Nationalrat und Ständerat mit gleichen Befugnissen.",
+ risposta_it:"L'Assemblea Federale; è composta da Consiglio Nazionale e Consiglio degli Stati, con uguali poteri."},
+
+/* ===================== 7. BÜRGERGEMEINDE BASEL (dettaglio) ===================== */
+{id:"bg001", tema:"Bürgergemeinde", sottotema:"Struttura",
+ domanda_de:"Wie ist die Bürgergemeinde der Stadt Basel organisiert (Parlament und Exekutive)?",
+ domanda_it:"Come è organizzata la Bürgergemeinde della città di Basilea (parlamento ed esecutivo)?",
+ risposta_de:"Bürgergemeinderat (Parlament, 40 Mitglieder), gewählt alle 6 Jahre von den rund 46'500 stimmberechtigten Bürgern (von insgesamt ca. 54'000 Bürger/-innen mit Basler Bürgerrecht); wählt den Bürgerrat (Exekutive, 7 Mitglieder).",
+ risposta_it:"Bürgergemeinderat (parlamento, 40 membri), eletto ogni 6 anni dai circa 46'500 cittadini borghesi aventi diritto di voto (su un totale di circa 54'000 con cittadinanza borghese di Basilea); elegge il Bürgerrat (esecutivo, 7 membri)."},
+
+{id:"bg002", tema:"Bürgergemeinde", sottotema:"Bürgerspital",
+ domanda_de:"Was ist das Bürgerspital Basel (BSB)?",
+ domanda_it:"Cos'è il Bürgerspital Basel (BSB)?",
+ risposta_de:"Das Bürgerspital Basel ist die grösste Abteilung der Bürgergemeinde mit rund 1500 Mitarbeitenden und kümmert sich um Betagte und Menschen mit Behinderung.",
+ risposta_it:"Il Bürgerspital Basel è il reparto più grande della Bürgergemeinde, con circa 1500 dipendenti, e si occupa di anziani e persone con disabilità."},
+
+{id:"bg003", tema:"Bürgergemeinde", sottotema:"Waisenhaus",
+ domanda_de:"Was bietet das Waisenhaus der Bürgergemeinde?",
+ domanda_it:"Cosa offre l'orfanotrofio della Bürgergemeinde?",
+ risposta_de:"Wohnbetreuung für Kinder und Jugendliche, die zeitweise nicht in der eigenen Familie aufwachsen können, sowie Unterstützungsangebote für Familien.",
+ risposta_it:"Assistenza residenziale per bambini e ragazzi che non possono crescere nella propria famiglia per un periodo, oltre a servizi di supporto per le famiglie."},
+
+{id:"bg004", tema:"Bürgergemeinde", sottotema:"Servizi centrali",
+ domanda_de:"Wofür sind die Zentralen Dienste der Bürgergemeinde zuständig?",
+ domanda_it:"Di cosa si occupano i Servizi Centrali della Bürgergemeinde?",
+ risposta_de:"Die Zentralen Dienste der Bürgergemeinde sind zuständig für Einbürgerungen, die Verwaltung des Gemeindevermögens und die Forstverwaltung, unter anderem des Waldes Hardwald, historisch auch Birsfelder Hard genannt, da er an die Gemeinde Birsfelden angrenzt.",
+ risposta_it:"I Servizi Centrali della Bürgergemeinde si occupano delle naturalizzazioni, della gestione del patrimonio della comunità e dell'amministrazione forestale, tra cui il bosco Hardwald, storicamente chiamato anche Birsfelder Hard perché confina con il comune di Birsfelden."},
+
+{id:"bg005", tema:"Bürgergemeinde", sottotema:"Christoph Merian Stiftung",
+ domanda_de:"Was macht die Christoph Merian Stiftung?",
+ domanda_it:"Cosa fa la Fondazione Christoph Merian?",
+ risposta_de:"Steht unter Aufsicht der Bürgergemeinde; ihre Erträge finanzieren Projekte in Sozialem, Kultur und Natur.",
+ risposta_it:"È sotto la supervisione della Bürgergemeinde; i suoi proventi finanziano progetti sociali, culturali e naturalistici."},
+
+/* ===================== 8. GOVERNO E TRIBUNALI CANTONALI ===================== */
+{id:"reg001", tema:"Regierung BS", sottotema:"Popolazione",
+ domanda_de:"Wie viele Einwohner hat der Kanton Basel-Stadt (2023) und wie hoch ist der Ausländeranteil?",
+ domanda_it:"Quanti abitanti ha il canton Basilea Città (2023) e qual è la percentuale di stranieri?",
+ risposta_de:"Der Kanton Basel-Stadt zählte 2023 200'000 Einwohner, davon 33% Ausländer aus 166 Ländern.",
+ risposta_it:"Il canton Basilea Città contava nel 2023 200'000 abitanti, di cui il 33% stranieri provenienti da 166 paesi."},
+
+{id:"reg002", tema:"Regierung BS", sottotema:"Elezioni",
+ domanda_de:"Wer wählt den Regierungsrat und für welche Amtsdauer?",
+ domanda_it:"Chi elegge il Regierungsrat e per quale durata?",
+ risposta_de:"Das Volk (stimmberechtigte Schweizer im Kanton) für 4 Jahre; nächste Wahlen 2028. Der Regierungspräsident wird separat gewählt.",
+ risposta_it:"Il popolo (cittadini svizzeri con diritto di voto nel cantone) per 4 anni; prossime elezioni nel 2028. Il Presidente del Governo viene eletto separatamente."},
+
+{id:"reg003", tema:"Regierung BS", sottotema:"Dipartimenti",
+ domanda_de:"Welche 7 Departemente hat der Regierungsrat von Basel-Stadt?",
+ domanda_it:"Quali sono i 7 dipartimenti del Regierungsrat di Basilea Città?",
+ risposta_de:"Der Regierungsrat von Basel-Stadt gliedert sich in 7 Departemente: das Präsidialdepartement (PD), das Bau- und Verkehrsdepartement (BVD), das Erziehungsdepartement (ED), das Finanzdepartement (FD), das Gesundheitsdepartement (GD), das Justiz- und Sicherheitsdepartement (JSD) sowie das Departement für Wirtschaft, Soziales und Umwelt (WSU).",
+ risposta_it:"Il Regierungsrat di Basilea Città si suddivide in 7 dipartimenti: il Dipartimento presidenziale (PD), il Dipartimento delle costruzioni e trasporti (BVD), il Dipartimento dell'istruzione (ED), il Dipartimento delle finanze (FD), il Dipartimento della salute (GD), il Dipartimento di giustizia e sicurezza (JSD) e il Dipartimento degli affari economici, sociali e ambientali (WSU)."},
+
+{id:"reg004", tema:"Regierung BS", sottotema:"Tribunali cantonali",
+ domanda_de:"Welche kantonalen Gerichte gibt es in Basel-Stadt und wer wählt die Richter?",
+ domanda_it:"Quali tribunali cantonali esistono a Basilea Città e chi elegge i giudici?",
+ risposta_de:"Zu den kantonalen Gerichten von Basel-Stadt gehören das Appellationsgericht, das Zivilgericht und das Sozialversicherungsgericht, alle an der Bäumleingasse, sowie das Strafgericht an der Schützenmattstrasse; die Gerichtspräsidien werden alle 6 Jahre vom Volk gewählt, die Richter seit Januar 2016 vom Grossen Rat.",
+ risposta_it:"I tribunali cantonali di Basilea Città sono la Corte d'appello, il Tribunale civile e il Tribunale delle assicurazioni sociali, tutti in Bäumleingasse, e il Tribunale penale in Schützenmattstrasse; i presidenti di tribunale sono eletti dal popolo ogni 6 anni, i giudici dal gennaio 2016 sono eletti dal Gran Consiglio."},
+
+/* ===================== 9. GEOGRAFIA DETTAGLIATA BASEL-STADT ===================== */
+{id:"geo001", tema:"Geografia BS", sottotema:"Confini",
+ domanda_de:"An welche Länder und an welchen Kanton grenzt Basel-Stadt?",
+ domanda_it:"Con quali paesi e con quale cantone confina Basilea Città?",
+ risposta_de:"Basel-Stadt grenzt im Norden an Deutschland und im Westen an Frankreich; der Kanton Basel-Landschaft liegt im Osten, Süden und Westen.",
+ risposta_it:"Basilea Città confina a nord con la Germania e a ovest con la Francia; il canton Basilea Campagna si trova a est, sud e ovest."},
+
+{id:"geo002", tema:"Geografia BS", sottotema:"Regio",
+ domanda_de:"Wie heisst die Region um Basel, wo drei Länder aufeinandertreffen?",
+ domanda_it:"Come si chiama la regione attorno a Basilea dove si incontrano tre paesi?",
+ risposta_de:"Die Region um Basel, wo Deutschland, Frankreich und die Schweiz aufeinandertreffen, heisst Regio Basiliensis und wird auch Dreiland genannt.",
+ risposta_it:"La regione attorno a Basilea, dove si incontrano Germania, Francia e Svizzera, si chiama Regio Basiliensis ed è chiamata anche Dreiland."},
+
+{id:"geo003", tema:"Geografia BS", sottotema:"Fiumi",
+ domanda_de:"Welche Flüsse fliessen durch Basel-Stadt, und in welchen Fluss münden sie?",
+ domanda_it:"Quali fiumi attraversano Basilea Città, e in quale fiume confluiscono?",
+ risposta_de:"Durch Basel-Stadt fliessen die Birs, die Birsig und die Wiese; sie münden alle in den Rhein.",
+ risposta_it:"Attraverso Basilea Città scorrono la Birs, la Birsig e la Wiese, che confluiscono tutte nel Reno."},
+
+/* ===================== 10. STORIA ANTICA E ISTITUZIONI ===================== */
+{id:"hist025", tema:"Geschichte", sottotema:"Primi abitanti",
+ domanda_de:"Wer waren die ersten Siedler in Basel?",
+ domanda_it:"Chi furono i primi abitanti di Basilea?",
+ risposta_de:"Die ersten Siedler in Basel waren die Kelten, die auf dem Münsterhügel einen Zufluchtsort hatten, später kamen die Römer.",
+ risposta_it:"I primi abitanti di Basilea furono i Celti, che avevano un rifugio sul colle del Münster; in seguito arrivarono i Romani."},
+
+{id:"hist026", tema:"Geschichte", sottotema:"Stadtmauern",
+ domanda_de:"Welche Reste der Stadtbefestigung sind bis heute erhalten?",
+ domanda_it:"Quali resti delle mura cittadine sono giunti fino a oggi?",
+ risposta_de:"Bis heute erhalten sind Reste der Stadtbefestigung wie die Letzimauer sowie die Tore St. Alban-Tor, St. Johann-Tor und Spalentor.",
+ risposta_it:"Sono giunti fino a oggi resti delle mura cittadine come la Letzimauer e le porte St. Alban-Tor, St. Johann-Tor e Spalentor."},
+
+{id:"hist027", tema:"Geschichte", sottotema:"Fondazione Università",
+ domanda_de:"Von wem wurde die Universität Basel gegründet, und mit welchen Gewerben war sie verbunden?",
+ domanda_it:"Da chi fu fondata l'Università di Basilea, e con quali attività era collegata?",
+ risposta_de:"Die Universität Basel wurde im Jahr 1460 von Papst Pius II. gegründet und war eng mit dem Buchdruck und den Papiermühlen der Stadt verbunden.",
+ risposta_it:"L'Università di Basilea fu fondata nel 1460 da Papa Pio II ed era strettamente legata alla stampa e alle cartiere della città."},
+
+/* ===================== 11. ECONOMIA E TURISMO ===================== */
+{id:"econ001", tema:"Kultur", sottotema:"Economia",
+ domanda_de:"Welche grossen Pharmaunternehmen haben ihren Sitz in Basel?",
+ domanda_it:"Quali grandi aziende farmaceutiche hanno sede a Basilea?",
+ risposta_de:"Die grossen Pharmaunternehmen mit Sitz in Basel sind Roche und Novartis.",
+ risposta_it:"Le grandi aziende farmaceutiche con sede a Basilea sono Roche e Novartis."},
+
+{id:"econ002", tema:"Kultur", sottotema:"Fiere",
+ domanda_de:"Welche grossen Messen finden in Basel statt?",
+ domanda_it:"Quali grandi fiere si svolgono a Basilea?",
+ risposta_de:"Zu den grossen Messen, die in Basel stattfinden, gehören Baselworld und Art Basel.",
+ risposta_it:"Tra le grandi fiere che si svolgono a Basilea ci sono Baselworld e Art Basel."},
+
+{id:"econ003", tema:"Kultur", sottotema:"Herbstmesse",
+ domanda_de:"Welches ist die älteste Messe der Schweiz, und seit wann besteht ihr Marktrecht?",
+ domanda_it:"Qual è la fiera più antica della Svizzera, e da quando ha diritti di mercato?",
+ risposta_de:"Die älteste Messe der Schweiz ist die Basler Herbstmesse, die seit 1471 Marktrechte besitzt.",
+ risposta_it:"La fiera più antica della Svizzera è la Fiera d'autunno di Basilea, che possiede diritti di mercato dal 1471."},
+
+{id:"kul005", tema:"Kultur", sottotema:"Vogel Gryff",
+ domanda_de:"Was ist der Vogel Gryff und wann findet er statt?",
+ domanda_it:"Cos'è il Vogel Gryff e quando si svolge?",
+ risposta_de:"Ein altes Brauchtum von Kleinbasel, Fest der 3 Ehrengesellschaften, jährlich am 13., 20. oder 27. Januar je nach Turnus.",
+ risposta_it:"Un'antica usanza di Kleinbasel, festa delle 3 società onorarie, ogni anno il 13, 20 o 27 gennaio a rotazione."},
+
+{id:"kul006", tema:"Kultur", sottotema:"Vogel Gryff Gesellschaften",
+ domanda_de:"Wie heissen die drei Ehrengesellschaften von Kleinbasel und ihre Ehrenzeichen?",
+ domanda_it:"Come si chiamano le tre società onorarie di Kleinbasel e i loro simboli?",
+ risposta_de:"Die Gesellschaft zum Rebhaus trägt den Löwen, die Gesellschaft zur Haeren den Wilden Mann, und die Gesellschaft zum Greifen den Vogel Gryff.",
+ risposta_it:"La Gesellschaft zum Rebhaus porta il Leone, la Gesellschaft zur Haeren l'Uomo Selvaggio, e la Gesellschaft zum Greifen il Grifone (Vogel Gryff)."},
+/* ===================== 12. KULTUR, GESELLSCHAFT UND RELIGION ===================== */
+{id:"kul001", tema:"Kultur", sottotema:"Fasnacht",
+ domanda_de:"Was ist die Basler Fasnacht und wann beginnt sie?",
+ domanda_it:"Cos'è il Carnevale di Basilea e quando inizia?",
+ risposta_de:"Die „drey scheenschte Dääg“, Weltkulturerbe der UNESCO; beginnt am Montag nach Aschermittwoch um 4:00 Uhr mit dem Morgestraich und dauert 72 Stunden.",
+ risposta_it:"I \"tre giorni più belli\", patrimonio UNESCO; inizia il lunedì dopo le Ceneri alle 4:00 del mattino con il Morgestraich e dura 72 ore."},
+
+{id:"kul002", tema:"Kultur", sottotema:"Museen",
+ domanda_de:"Wie viele Museen gibt es in Basel, und welche weiteren touristischen Sehenswürdigkeiten bietet die Stadt?",
+ domanda_it:"Quanti musei ci sono a Basilea, e quali altre attrazioni turistiche offre la città?",
+ risposta_de:"In Basel gibt es fast 40 Museen, darunter das Kunstmuseum, die älteste öffentliche Kunstsammlung der Welt, und die Fondation Beyeler in Riehen; weitere Sehenswürdigkeiten sind die Altstadt, das Münster und die Fähren über den Rhein.",
+ risposta_it:"A Basilea ci sono quasi 40 musei, tra cui il Kunstmuseum, la più antica collezione d'arte pubblica al mondo, e la Fondation Beyeler a Riehen; altre attrazioni sono il centro storico (Altstadt), la cattedrale (Münster) e i traghetti sul Reno (Fähren)."},
+
+{id:"kul003", tema:"Kultur", sottotema:"Religion",
+ domanda_de:"Welche Kirchen/Gemeinschaften sind öffentlich-rechtlich anerkannt, und wie hoch ist der Anteil Konfessionsloser in Basel?",
+ domanda_it:"Quali chiese/comunità sono riconosciute di diritto pubblico, e qual è la percentuale di persone senza confessione a Basilea?",
+ risposta_de:"Öffentlich-rechtlich anerkannt sind die evangelisch-reformierte, die römisch-katholische und die christkatholische Kirche sowie die israelitische Gemeinde; über 47% der Bevölkerung sind konfessionslos.",
+ risposta_it:"Sono riconosciute di diritto pubblico la chiesa evangelica-riformata, quella cattolica romana, quella cristiano-cattolica e la comunità israelitica; oltre il 47% della popolazione è senza confessione."},
+
+{id:"kul004", tema:"Kultur", sottotema:"Persönlichkeiten",
+ domanda_de:"Welche berühmten Persönlichkeiten sind mit Basel verbunden?",
+ domanda_it:"Quali personalità famose sono legate a Basilea?",
+ risposta_de:"Zu den berühmten Persönlichkeiten, die mit Basel verbunden sind, gehören der Humanist Erasmus von Rotterdam, der Mediziner Paracelsus, der Philosoph Friedrich Nietzsche, der Historiker Jacob Burckhardt, der DNA-Entdecker Friedrich Miescher und der Tennisstar Roger Federer.",
+ risposta_it:"Tra le personalità famose legate a Basilea ci sono l'umanista Erasmo da Rotterdam, il medico Paracelso, il filosofo Friedrich Nietzsche, lo storico Jacob Burckhardt, lo scopritore del DNA Friedrich Miescher e il tennista Roger Federer."},
+
+/* ===================== 13. BUND: DATI GENERALI E SEDE ===================== */
+{id:"gf010", tema:"Grundfakten", sottotema:"Bevölkerung",
+ domanda_de:"Wie viele Menschen leben in der Schweiz, und wie hoch ist der Ausländeranteil?",
+ domanda_it:"Quante persone vivono in Svizzera, e qual è la percentuale di stranieri?",
+ risposta_de:"In der Schweiz leben rund 9 Millionen Menschen, davon waren 2022 etwa 2,25 Millionen Ausländerinnen und Ausländer.",
+ risposta_it:"In Svizzera vivono circa 9 milioni di persone, di cui nel 2022 circa 2,25 milioni erano stranieri."},
+
+{id:"gf011", tema:"Grundfakten", sottotema:"Regierungssitz",
+ domanda_de:"Wo befindet sich der Sitz von Regierung und Parlament der Schweiz?",
+ domanda_it:"Dove si trova la sede del governo e del parlamento svizzero?",
+ risposta_de:"Regierung und Parlament haben ihren Sitz im Bundeshaus in der Bundesstadt Bern.",
+ risposta_it:"Il governo e il parlamento hanno sede nel Bundeshaus, nella città federale di Berna."},
+
+{id:"gf012", tema:"Grundfakten", sottotema:"Kantone",
+ domanda_de:"Wie viele Kantone hat die Schweiz, und wie viele davon haben nur einen Sitz im Ständerat?",
+ domanda_it:"Quanti cantoni ha la Svizzera, e quanti di essi hanno un solo seggio al Consiglio degli Stati?",
+ risposta_de:"Die Schweiz hat 26 Kantone, davon haben 6 Kantone (die ehemaligen Halbkantone) nur einen Sitz im Ständerat.",
+ risposta_it:"La Svizzera ha 26 cantoni, di cui 6 (gli ex semicantoni) hanno un solo seggio al Consiglio degli Stati."},
+
+/* ===================== 14. SEEN, FLÜSSE UND BERGE DER SCHWEIZ ===================== */
+{id:"geo004", tema:"Grundfakten", sottotema:"Seen",
+ domanda_de:"Welches sind die wichtigsten Seen der Schweiz?",
+ domanda_it:"Quali sono i laghi più importanti della Svizzera?",
+ risposta_de:"Zu den wichtigsten Schweizer Seen gehören der Neuenburgersee (der grösste vollständig in der Schweiz liegende See), der Bodensee bei St. Gallen, der Genfersee bei Genf, der Lago Maggiore bei Locarno und der Vierwaldstättersee bei Luzern.",
+ risposta_it:"Tra i laghi svizzeri più importanti ci sono il lago di Neuchâtel (il più grande interamente in territorio svizzero), il lago di Costanza presso San Gallo, il lago Lemano presso Ginevra, il Lago Maggiore presso Locarno e il lago dei Quattro Cantoni presso Lucerna."},
+
+{id:"geo005", tema:"Grundfakten", sottotema:"Flüsse Schweiz",
+ domanda_de:"Welches sind die wichtigsten Flüsse der Schweiz?",
+ domanda_it:"Quali sono i fiumi più importanti della Svizzera?",
+ risposta_de:"Zu den wichtigsten Flüssen der Schweiz gehören der Rhein, die Reuss im Kanton Uri, die Rhône und der Ticino bei Bellinzona.",
+ risposta_it:"Tra i fiumi più importanti della Svizzera ci sono il Reno, la Reuss nel canton Uri, il Rodano e il Ticino presso Bellinzona."},
+
+{id:"geo006", tema:"Grundfakten", sottotema:"Berge",
+ domanda_de:"Welches sind wichtige Berge und Gipfel der Schweiz?",
+ domanda_it:"Quali sono montagne e vette importanti della Svizzera?",
+ risposta_de:"Zu den bekannten Schweizer Bergen gehören das UNESCO-Welterbe Eiger, Mönch und Jungfrau (3'450 m, Berner Alpen), die Dufourspitze, das Matterhorn (4'478 m, Zermatt), der Pilatus (2'118 m, Luzern) und der Dom in den Walliser Alpen (4'545 m, Mischabelgruppe).",
+ risposta_it:"Tra le montagne svizzere più note ci sono il patrimonio UNESCO Eiger, Mönch e Jungfrau (3'450 m, Alpi Bernesi), la Dufourspitze, il Cervino (4'478 m, Zermatt), il Pilatus (2'118 m, Lucerna) e il Dom nelle Alpi Vallesane (4'545 m, gruppo del Mischabel)."},
+
+/* ===================== 15. GEWALTENTEILUNG UND VOLKSRECHTE (dettaglio) ===================== */
+{id:"sys013", tema:"Volksrechte", sottotema:"Stimmrecht",
+ domanda_de:"Ab welchem Alter hat man das Stimm- und Wahlrecht, und was ist dafür Voraussetzung?",
+ domanda_it:"A partire da quale età si ha il diritto di voto, e qual è il presupposto necessario?",
+ risposta_de:"Das Stimm- und Wahlrecht gilt ab 18 Jahren und setzt das Schweizer Bürgerrecht voraus.",
+ risposta_it:"Il diritto di voto vale a partire dai 18 anni e richiede la cittadinanza svizzera."},
+
+{id:"sys014", tema:"Volksrechte", sottotema:"Gewaltenteilung",
+ domanda_de:"Was bedeutet Gewaltenteilung, und welche drei Gewalten gibt es?",
+ domanda_it:"Cosa significa separazione dei poteri, e quali sono i tre poteri?",
+ risposta_de:"Gewaltenteilung bedeutet die klare Trennung von Legislative (Parlament), Exekutive (Regierung) und Judikative (Gerichte).",
+ risposta_it:"La separazione dei poteri significa la netta divisione tra potere legislativo (parlamento), esecutivo (governo) e giudiziario (tribunali)."},
+
+{id:"sys015", tema:"Volksrechte", sottotema:"Initiative Gesetzesänderung",
+ domanda_de:"Was kann eine kantonale Initiative verlangen, im Unterschied zu einer eidgenössischen?",
+ domanda_it:"Cosa può richiedere un'iniziativa cantonale, a differenza di una federale?",
+ risposta_de:"Eine eidgenössische Initiative verlangt eine Verfassungsänderung; eine kantonale Initiative kann sowohl eine Verfassungs- als auch eine Gesetzesänderung verlangen.",
+ risposta_it:"Un'iniziativa federale chiede una modifica costituzionale; un'iniziativa cantonale può chiedere sia una modifica costituzionale sia una modifica di legge."},
+
+/* ===================== 16. BÜRGERGEMEINDE: ULTERIORI DETTAGLI ===================== */
+{id:"bg006", tema:"Bürgergemeinde", sottotema:"Besonderheit Basel",
+ domanda_de:"Was unterscheidet Basel von allen anderen Gemeinden der Schweiz?",
+ domanda_it:"Cosa distingue Basilea da tutti gli altri comuni della Svizzera?",
+ risposta_de:"Basel hat keine Einwohnergemeinde mit entsprechenden Gemeinde- oder Stadtbehörden; diese Aufgaben übernimmt die Bürgergemeinde.",
+ risposta_it:"Basilea non possiede un comune (Einwohnergemeinde) con proprie autorità comunali; questi compiti sono svolti dalla Bürgergemeinde."},
+
+{id:"bg007", tema:"Bürgergemeinde", sottotema:"Sitz und Gerichte",
+ domanda_de:"Wo tagt der Bürgergemeinderat, und verfügt die Bürgergemeinde über eigene Gerichte?",
+ domanda_it:"Dove si riunisce il Bürgergemeinderat, e la Bürgergemeinde ha tribunali propri?",
+ risposta_de:"Der Bürgergemeinderat tagt im Stadthaus; die Bürgergemeinde verfügt über keine eigenen Gerichte.",
+ risposta_it:"Il Bürgergemeinderat si riunisce nello Stadthaus; la Bürgergemeinde non dispone di tribunali propri."},
+
+{id:"bg008", tema:"Bürgergemeinde", sottotema:"Zünfte und Gesellschaften",
+ domanda_de:"Was beaufsichtigt die Bürgergemeinde zusätzlich zur Christoph Merian Stiftung?",
+ domanda_it:"Cosa supervisiona la Bürgergemeinde oltre alla Fondazione Christoph Merian?",
+ risposta_de:"Die Bürgergemeinde beaufsichtigt zusätzlich die Basler Zünfte und Gesellschaften.",
+ risposta_it:"La Bürgergemeinde supervisiona inoltre le corporazioni e le società di Basilea."},
+
+/* ===================== 17. UMGEBUNG BASEL-STADT ===================== */
+{id:"geo008", tema:"Geografia BS", sottotema:"Nachbargemeinden Ausland",
+ domanda_de:"Welche ausländischen Gemeinden grenzen an Basel-Stadt?",
+ domanda_it:"Quali comuni esteri confinano con Basilea Città?",
+ risposta_de:"An der französischen Grenze liegen Saint-Louis und Huningue; an der deutschen Grenze liegen Weil am Rhein, Lörrach, Inzlingen und Grenzach-Wyhlen.",
+ risposta_it:"Al confine francese si trovano Saint-Louis e Huningue; al confine tedesco si trovano Weil am Rhein, Lörrach, Inzlingen e Grenzach-Wyhlen."},
+
+{id:"geo009", tema:"Geografia BS", sottotema:"Nachbargemeinden BL",
+ domanda_de:"Welche Gemeinden von Basel-Landschaft grenzen an Basel-Stadt?",
+ domanda_it:"Quali comuni di Basilea Campagna confinano con Basilea Città?",
+ risposta_de:"An Basel-Stadt grenzen die Gemeinden Birsfelden, Muttenz, Münchenstein, Reinach, Binningen, Bottmingen und Allschwil.",
+ risposta_it:"Confinano con Basilea Città i comuni di Birsfelden, Muttenz, Münchenstein, Reinach, Binningen, Bottmingen e Allschwil."},
+
+{id:"geo010", tema:"Geografia BS", sottotema:"Nordwestschweiz",
+ domanda_de:"Welche Kantone bilden die Nordwestschweiz?",
+ domanda_it:"Quali cantoni formano la Svizzera nordoccidentale?",
+ risposta_de:"Zur Nordwestschweiz gehören die Kantone Basel-Stadt, Basel-Landschaft, Aargau, Solothurn und teilweise der Jura.",
+ risposta_it:"La Svizzera nordoccidentale comprende i cantoni di Basilea Città, Basilea Campagna, Argovia, Soletta e in parte il Giura."}
+];
+
+/* Priorità di studio */
+const PRIORITY = {
+  br000:"alta", br001:"alta", br002:"alta", br003:"alta", br004:"alta",
+  br005:"alta", br006:"alta", br007:"alta", br008:"alta",
+  sys001:"alta", sys002:"alta", sys003:"alta", sys004:"alta",
+  sys005:"alta", sys006:"alta", sys007:"alta", sys008:"alta",
+  bs003:"alta", bs004:"alta", bg001:"alta", gf001:"alta",
+  hist003:"alta", hist017:"alta", hist018:"alta", hist019:"alta", hist022:"alta",
+  gf003:"bassa", gf004:"bassa", gf006:"bassa", gf007:"bassa", gf008:"bassa", gf009:"bassa",
+  geo002:"bassa", geo003:"bassa",
+  hist001:"bassa", hist002:"bassa", hist004:"bassa", hist005:"bassa", hist006:"bassa",
+  hist010:"bassa", hist011:"bassa", hist013:"bassa", hist015:"bassa", hist020:"bassa", hist023:"bassa",
+  hist025:"bassa", hist026:"bassa", hist027:"bassa",
+  bs002:"bassa", kul002:"bassa", kul004:"bassa", kul005:"bassa",
+  econ001:"bassa", econ002:"bassa", econ003:"bassa",
+  bg002:"media", bg003:"media", bg004:"media", bg005:"bassa",
+  reg001:"bassa", reg004:"bassa",
+  // Nuove carte: priorità alta per concetti chiave, bassa per dettagli geografici/turistici
+  sys013:"alta", sys014:"alta", gf011:"alta", bg006:"alta", bg007:"media", bg008:"bassa",
+  sys015:"media", gf010:"bassa", gf012:"media",
+  geo004:"bassa", geo005:"bassa", geo006:"bassa", geo008:"bassa", geo009:"bassa", geo010:"bassa",
+  kul006:"bassa"
+};
+function getPriority(id){ return PRIORITY[id] || "media"; }
+function priorityWeight(id){ return {alta:0, media:1, bassa:2}[getPriority(id)]; }
+
+/* =========================================================
+   CAPITOLI — ogni capitolo raggruppa uno o più "tema"
+   ========================================================= */
+const CHAPTERS = [
+  {id:"c1", num:1, titolo_it:"La Confederazione: fondamenti e simboli", titolo_de:"Grundfakten und Symbole", temi:["Grundfakten"]},
+  {id:"c2", num:2, titolo_it:"Storia della Svizzera e di Basilea", titolo_de:"Geschichte", temi:["Geschichte"]},
+  {id:"c3", num:3, titolo_it:"Il Consiglio Federale", titolo_de:"Der Bundesrat", temi:["Bundesrat"]},
+  {id:"c4", num:4, titolo_it:"Assemblea Federale e diritti popolari", titolo_de:"Bundesversammlung und Volksrechte", temi:["Volksrechte"]},
+  {id:"c5", num:5, titolo_it:"Il Cantone di Basilea Città: politica", titolo_de:"Kanton Basel-Stadt: Politik", temi:["Basel-Stadt","Regierung BS"]},
+  {id:"c6", num:6, titolo_it:"La Bürgergemeinde di Basilea", titolo_de:"Die Bürgergemeinde", temi:["Bürgergemeinde"]},
+  {id:"c7", num:7, titolo_it:"Geografia di Basilea Città", titolo_de:"Geografie Basel-Stadt", temi:["Geografia BS"]},
+  {id:"c8", num:8, titolo_it:"Cultura, società ed economia", titolo_de:"Kultur, Gesellschaft und Wirtschaft", temi:["Kultur"]}
+];
+function cardsForChapter(ch){
+  return FLASHCARDS.filter(c => ch.temi.includes(c.tema));
+}
+function getChapter(id){ return CHAPTERS.find(c=>c.id===id); }
+
+/* =========================================================
+   SRS (Leitner) — usato per le Flashcard
+   ========================================================= */
+const STORE_KEY = "burgertest_srs_v1";
+function loadSRS(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch(e){ return {}; } }
+function saveSRS(s){ localStorage.setItem(STORE_KEY, JSON.stringify(s)); queueCloudSync(); }
+function getCardState(id){ const s = loadSRS(); return s[id] || { box:0, due: Date.now() }; }
+function setCardState(id, box, dueOffsetDays){
+  const s = loadSRS(); s[id] = { box, due: Date.now() + dueOffsetDays*24*60*60*1000 }; saveSRS(s);
+}
+function isDue(id){ return getCardState(id).due <= Date.now(); }
+function isNewCard(id){ return !(id in loadSRS()); }
+
+/* Impostazioni utente */
+const SETTINGS_KEY = "burgertest_settings_v1";
+function loadSettings(){
+  try{ return Object.assign({dailyLimit:6}, JSON.parse(localStorage.getItem(SETTINGS_KEY))); }
+  catch(e){ return {dailyLimit:6}; }
+}
+function saveSettings(s){ localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); queueCloudSync(); }
+
+const DAILY_KEY = "burgertest_daily_v1";
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function loadDaily(){
+  let d;
+  try{ d = JSON.parse(localStorage.getItem(DAILY_KEY)); } catch(e){ d = null; }
+  if(!d || d.date !== todayStr()) d = {date: todayStr(), introducedIds: []};
+  return d;
+}
+function saveDaily(d){ localStorage.setItem(DAILY_KEY, JSON.stringify(d)); queueCloudSync(); }
+function markIntroducedToday(id){
+  const d = loadDaily();
+  if(!d.introducedIds.includes(id)){ d.introducedIds.push(id); saveDaily(d); }
+}
+
+/* Risultati test per capitolo */
+const RESULTS_KEY = "burgertest_chapter_results_v1";
+function loadResults(){ try{ return JSON.parse(localStorage.getItem(RESULTS_KEY)) || {}; } catch(e){ return {}; } }
+function saveChapterResult(chId, pct){
+  const r = loadResults();
+  r[chId] = { pct, date: Date.now() };
+  localStorage.setItem(RESULTS_KEY, JSON.stringify(r));
+  queueCloudSync();
+}
+function getChapterResult(chId){ return loadResults()[chId] || null; }
+
+/* Capitoli completati al 100% (usato solo per mostrare il badge "superato", non per limitare l'accesso) */
+function getMasteredChapters(){
+  const results = loadResults();
+  return CHAPTERS.filter(c => results[c.id] && results[c.id].pct >= 100);
+}
+
+/* Ambito scelto per l'Ortografia: "all" (tutti i capitoli) oppure l'id di un capitolo specifico.
+   Non è più richiesto il 100% per selezionare un capitolo. */
+const SPELL_SCOPE_KEY = "burgertest_spell_scope_v1";
+function loadSpellScope(){ return localStorage.getItem(SPELL_SCOPE_KEY) || "all"; }
+function saveSpellScope(v){ localStorage.setItem(SPELL_SCOPE_KEY, v); queueCloudSync(); }
+function getSpellScopeTemi(){
+  const scope = loadSpellScope();
+  if(scope === "all") return CHAPTERS.flatMap(c => c.temi);
+  const ch = CHAPTERS.find(c => c.id === scope);
+  if(!ch){ saveSpellScope("all"); return CHAPTERS.flatMap(c => c.temi); }
+  return ch.temi;
+}
+
+/* Ambito scelto per le Flashcard: stessa logica dell'Ortografia */
+const FLASH_SCOPE_KEY = "burgertest_flash_scope_v1";
+function loadFlashScope(){ return localStorage.getItem(FLASH_SCOPE_KEY) || "all"; }
+function saveFlashScope(v){ localStorage.setItem(FLASH_SCOPE_KEY, v); queueCloudSync(); }
+function getFlashScopeTemi(){
+  const scope = loadFlashScope();
+  if(scope === "all") return CHAPTERS.flatMap(c => c.temi);
+  const ch = CHAPTERS.find(c => c.id === scope);
+  if(!ch){ saveFlashScope("all"); return CHAPTERS.flatMap(c => c.temi); }
+  return ch.temi;
+}
+
+/* Mischia array (Fisher-Yates) */
+function shuffle(arr){
+  const a = [...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function makeQueueDrawer(sourceArray){
+  let queue = []; let last = null;
+  return function draw(){
+    if(queue.length===0){
+      queue = shuffle(sourceArray);
+      if(queue.length>1 && queue[0]===last){ [queue[0],queue[1]] = [queue[1],queue[0]]; }
+    }
+    const item = queue.shift(); last = item; return item;
+  };
+}
+function interleaveByTopic(cards){
+  const groups = {};
+  cards.forEach(c=>{ (groups[c.tema] = groups[c.tema] || []).push(c); });
+  Object.values(groups).forEach(g => g.sort((a,b)=> priorityWeight(a.id)-priorityWeight(b.id)));
+  const result = [];
+  let temaKeys = Object.keys(groups);
+  while(temaKeys.some(k=>groups[k].length)){
+    temaKeys = shuffle(temaKeys.filter(k=>groups[k].length));
+    temaKeys.forEach(k=>{ if(groups[k].length) result.push(groups[k].shift()); });
+  }
+  return result;
+}
+
+/* =========================================================
+   NAVIGAZIONE
+   ========================================================= */
+let currentChapterId = null;
+
+function switchTab(name){
+  document.querySelectorAll("section.view").forEach(v=>v.classList.remove("active"));
+  document.querySelectorAll("nav.tabbar button").forEach(b=>b.classList.remove("active"));
+  document.getElementById("view-"+name).classList.add("active");
+  const navBtn = document.querySelector('nav.tabbar button[data-view="'+name+'"]');
+  if(navBtn) navBtn.classList.add("active");
+  if(name==="home") renderHome();
+  if(name==="chapters") renderChapterList();
+  if(name==="spell") loadSpellingQuestion();
+  if(name==="flash"){
+    if(!studyQueue || studyQueue.length===0 || studyIndex>=studyQueue.length){
+      buildStudyQueue();
+    }
+    showCard();
+  }
+}
+function goHome(){ switchTab("home"); }
+
+/* =========================================================
+   HOME
+   ========================================================= */
+function renderHome(){
+  const results = loadResults();
+  const done = CHAPTERS.filter(c => results[c.id] && results[c.id].pct >= 80).length;
+  document.getElementById("stat-chapters-done").textContent = done + " / " + CHAPTERS.length;
+  document.getElementById("stat-tot").textContent = FLASHCARDS.length;
+
+  const settings = loadSettings();
+  const daily = loadDaily();
+  document.getElementById("daily-limit-input").value = settings.dailyLimit;
+  document.getElementById("daily-progress").textContent =
+    daily.introducedIds.length + " / " + settings.dailyLimit + " introdotte oggi";
+}
+function updateDailyLimit(val){
+  const n = Math.max(1, Math.min(30, parseInt(val,10) || 6));
+  const s = loadSettings(); s.dailyLimit = n; saveSettings(s);
+  renderHome();
+}
+
+/* =========================================================
+   CAPITOLI: lista
+   ========================================================= */
+function renderChapterList(){
+  const list = document.getElementById("chapter-list");
+  list.innerHTML = "";
+  CHAPTERS.forEach(ch=>{
+    const n = cardsForChapter(ch).length;
+    const res = getChapterResult(ch.id);
+    const row = document.createElement("div");
+    row.className = "chapter-row";
+    row.onclick = ()=>openChapterDetail(ch.id);
+    let scoreHtml;
+    if(!res) scoreHtml = '<span class="chapter-score none">da fare</span>';
+    else if(res.pct >= 80) scoreHtml = '<span class="chapter-score pass">'+res.pct+'%</span>';
+    else scoreHtml = '<span class="chapter-score fail">'+res.pct+'%</span>';
+    row.innerHTML = `
+      <div class="chapter-num">${ch.num}</div>
+      <div class="chapter-info">
+        <div class="chapter-title-it">${ch.titolo_it}</div>
+        <div class="chapter-title-de">${ch.titolo_de}</div>
+        <div class="chapter-meta">${n} nozioni</div>
+      </div>
+      ${scoreHtml}
+    `;
+    list.appendChild(row);
+  });
+}
+
+/* =========================================================
+   CAPITOLO: dettaglio
+   ========================================================= */
+function openChapterDetail(chId){
+  currentChapterId = chId;
+  const ch = getChapter(chId);
+  const cards = cardsForChapter(ch);
+  document.getElementById("chdetail-num").textContent = "CAPITOLO " + ch.num;
+  document.getElementById("chdetail-title-it").textContent = ch.titolo_it;
+  document.getElementById("chdetail-title-de").textContent = ch.titolo_de;
+  const res = getChapterResult(chId);
+  document.getElementById("chdetail-meta").textContent =
+    cards.length + " nozioni" + (res ? " · ultimo test: " + res.pct + "%" : " · non ancora testato");
+  document.querySelectorAll("section.view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("view-chapter-detail").classList.add("active");
+}
+
+/* =========================================================
+   LEZIONE — lettura completa del capitolo, DE + IT
+   ========================================================= */
+function openLesson(){
+  const ch = getChapter(currentChapterId);
+  const cards = cardsForChapter(ch);
+  const bySotto = {};
+  cards.forEach(c=>{ (bySotto[c.sottotema] = bySotto[c.sottotema] || []).push(c); });
+
+  let html = `<div class="card" style="margin-bottom:16px;">
+    <div style="color:var(--red); font-weight:800; font-size:13px;">CAPITOLO ${ch.num}</div>
+    <div style="font-size:19px; font-weight:700; margin-top:2px;">${ch.titolo_it}</div>
+    <div style="color:var(--text-dim); font-size:14px;">${ch.titolo_de}</div>
+  </div>`;
+
+  Object.keys(bySotto).forEach(sotto=>{
+    const paraDE = bySotto[sotto].map(c=>c.risposta_de).join(" ");
+    const paraIT = bySotto[sotto].map(c=>c.risposta_it).join(" ");
+    html += `<div class="lesson-group">
+      <h3>${sotto}</h3>
+      <p class="lesson-para-de">${paraDE}</p>
+      <p class="lesson-para-it">${paraIT}</p>
+    </div>`;
+  });
+
+  document.getElementById("lesson-content").innerHTML = html;
+  document.getElementById("lesson-back").onclick = ()=>{
+    document.querySelectorAll("section.view").forEach(v=>v.classList.remove("active"));
+    document.getElementById("view-chapter-detail").classList.add("active");
+  };
+  document.querySelectorAll("section.view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("view-lesson").classList.add("active");
+  window.scrollTo(0,0);
+}
+
+/* =========================================================
+   TEST DEL CAPITOLO — copre TUTTI i punti, in ordine mescolato
+   ========================================================= */
+let testQueue = [];
+let testIndex = 0;
+let testScore = 0;
+let testWrongItems = [];
+
+function startChapterTest(){
+  const ch = getChapter(currentChapterId);
+  testQueue = shuffle(cardsForChapter(ch));
+  testIndex = 0; testScore = 0; testWrongItems = [];
+  document.querySelectorAll("section.view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("view-test").classList.add("active");
+  showTestQuestion();
+}
+function showTestQuestion(){
+  const c = testQueue[testIndex];
+  document.getElementById("test-question").textContent = c.domanda_de;
+  document.getElementById("test-question-it").textContent = c.domanda_it;
+  const pct = Math.round((testIndex/testQueue.length)*100);
+  document.getElementById("test-progress-bar").style.width = pct+"%";
+
+  // distrattori: preferibilmente dallo stesso capitolo, altrimenti da tutto il pool
+  let others = testQueue.filter(x=>x.id!==c.id);
+  if(others.length < 2) others = FLASHCARDS.filter(x=>x.id!==c.id);
+  others = shuffle(others).slice(0,2);
+  const opts = shuffle([c, ...others].map(x=>x.risposta_de));
+
+  const container = document.getElementById("test-options");
+  container.innerHTML = "";
+  opts.forEach(opt=>{
+    const btn = document.createElement("button");
+    btn.className = "quiz-opt";
+    btn.textContent = opt;
+    btn.onclick = ()=>answerTest(btn, opt, c);
+    container.appendChild(btn);
+  });
+}
+function answerTest(btn, opt, card){
+  const correct = opt === card.risposta_de;
+  if(correct) testScore++;
+  else testWrongItems.push(card);
+
+  document.querySelectorAll("#test-options .quiz-opt").forEach(b=>{
+    b.onclick = null;
+    if(b.textContent === card.risposta_de) b.classList.add("correct");
+    else if(b===btn) b.classList.add("wrong");
+  });
+
+  setTimeout(()=>{
+    testIndex++;
+    if(testIndex >= testQueue.length) showTestResults();
+    else showTestQuestion();
+  }, 1100);
+}
+function showTestResults(){
+  const pct = Math.round((testScore/testQueue.length)*100);
+  saveChapterResult(currentChapterId, pct);
+
+  document.getElementById("result-pct").textContent = pct + "%";
+  document.getElementById("result-pct").style.color = pct>=80 ? "var(--green)" : "var(--red)";
+  document.getElementById("result-lbl").textContent = testScore + " su " + testQueue.length + " corrette";
+
+  const wrongList = document.getElementById("result-wrong-list");
+  wrongList.innerHTML = "";
+  if(testWrongItems.length>0){
+    const h = document.createElement("h2");
+    h.className = "section-title";
+    h.textContent = "Da rivedere";
+    wrongList.appendChild(h);
+    testWrongItems.forEach(c=>{
+      const div = document.createElement("div");
+      div.className = "wrong-item";
+      div.innerHTML = `<div class="q">${c.domanda_de}</div>
+        <div class="a">${c.risposta_de}</div>
+        <div class="ait">${c.risposta_it}</div>`;
+      wrongList.appendChild(div);
+    });
+  }
+
+  document.querySelectorAll("section.view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("view-test-results").classList.add("active");
+}
+
+/* =========================================================
+   FLASHCARD (ripasso libero, sessione mista)
+   ========================================================= */
+let studyQueue = [];
+let studyIndex = 0;
+let flipped = false;
+
+function buildStudyQueue(){
+  const scopeTemi = getFlashScopeTemi();
+  const scope = FLASHCARDS.filter(c => scopeTemi.includes(c.tema));
+  if(scope.length === 0){ studyQueue = []; studyIndex = 0; return; }
+  const settings = loadSettings();
+  const daily = loadDaily();
+  const due = scope.filter(c => !isNewCard(c.id) && isDue(c.id));
+  const allowedNew = Math.max(0, settings.dailyLimit - daily.introducedIds.length);
+  const newCards = scope
+    .filter(c => isNewCard(c.id) && !daily.introducedIds.includes(c.id))
+    .sort((a,b)=> priorityWeight(a.id)-priorityWeight(b.id))
+    .slice(0, allowedNew);
+  let pool = [...due, ...newCards];
+  if(pool.length === 0) pool = [...scope];
+  studyQueue = interleaveByTopic(pool);
+  studyIndex = 0;
+}
+function startStudy(){
+  buildStudyQueue();
+  switchTab("flash");
+}
+function renderFlashScopeSelector(){
+  const wrap = document.getElementById("flash-scope-wrap");
+  const sel = document.getElementById("flash-scope-select");
+  if(!wrap || !sel) return;
+  wrap.style.display = "block";
+  const mastered = getMasteredChapters().map(c=>c.id);
+  const current = loadFlashScope();
+  sel.innerHTML = "";
+  const optAll = document.createElement("option");
+  optAll.value = "all";
+  optAll.textContent = "Tutti i capitoli (" + CHAPTERS.length + ")";
+  sel.appendChild(optAll);
+  CHAPTERS.forEach(c=>{
+    const opt = document.createElement("option");
+    opt.value = c.id;
+    opt.textContent = "Cap. " + c.num + " — " + c.titolo_it + (mastered.includes(c.id) ? " ✓" : "");
+    sel.appendChild(opt);
+  });
+  sel.value = current;
+}
+function onFlashScopeChange(){
+  const sel = document.getElementById("flash-scope-select");
+  saveFlashScope(sel.value);
+  buildStudyQueue();
+  showCard();
+}
+function showCard(){
+  flipped = false;
+  renderFlashScopeSelector();
+  if(!studyQueue || studyQueue.length===0){
+    document.getElementById("fc-tag").textContent = "Nessuna carta in questo ambito";
+    document.getElementById("fc-front").textContent = "Prova a selezionare un altro capitolo, oppure \"Tutti i capitoli\".";
+    document.getElementById("fc-back").style.display = "none";
+    document.getElementById("fc-actions").style.display = "none";
+    document.getElementById("fc-progress-bar").style.width = "0%";
+    return;
+  }
+  const c = studyQueue[studyIndex];
+  if(isNewCard(c.id)) markIntroducedToday(c.id);
+  const pr = getPriority(c.id);
+  const prLabel = pr==="alta" ? " · ★ priorità alta" : (pr==="bassa" ? " · dettaglio" : "");
+  document.getElementById("fc-tag").textContent = c.tema + " · " + c.sottotema + prLabel;
+  document.getElementById("fc-front").textContent = c.domanda_de;
+  document.getElementById("fc-back").style.display = "block";
+  document.getElementById("fc-back").textContent = c.domanda_it;
+  document.getElementById("fc-actions").style.display = "none";
+  const pct = Math.round((studyIndex/studyQueue.length)*100);
+  document.getElementById("fc-progress-bar").style.width = pct+"%";
+}
+function flipCard(){
+  if(flipped) return;
+  if(!studyQueue || studyQueue.length===0) return;
+  flipped = true;
+  const c = studyQueue[studyIndex];
+  document.getElementById("fc-front").textContent = c.risposta_de;
+  document.getElementById("fc-back").style.display = "block";
+  document.getElementById("fc-back").textContent = c.risposta_it;
+  document.getElementById("fc-actions").style.display = "grid";
+}
+function rateCard(quality){
+  const c = studyQueue[studyIndex];
+  const cur = getCardState(c.id);
+  let box = cur.box; let offset;
+  if(quality===1){ box = 0; offset = 0; }
+  else if(quality===2){ box = Math.max(1, box); offset = 2; }
+  else { box = Math.min(3, box+1); offset = box===3? 14: 6; }
+  setCardState(c.id, box, offset);
+  studyIndex++;
+  if(studyIndex >= studyQueue.length) goHome();
+  else showCard();
+}
+
+/* =========================================================
+   ORTOGRAFIA
+   ========================================================= */
+const SPELLING_QUIZ = [
+  {word:"Bundesversammlung", tema:"Volksrechte", wrong:["Bundesversamlung","Bundesversammlug"], hint:"Wie sagt man auf Deutsch \"Assemblea Federale\"?"},
+  {word:"Kollegialitätsprinzip", tema:"Bundesrat", wrong:["Kollegialprinzip","Kolegialitätsprinzip"], hint:"Wie sagt man auf Deutsch \"principio di collegialità\"?"},
+  {word:"Volksinitiative", tema:"Volksrechte", wrong:["Volksinitiatve","Volksiniziative"], hint:"Wie sagt man auf Deutsch \"iniziativa popolare\"?"},
+  {word:"Subsidiarität", tema:"Volksrechte", wrong:["Subsidarität","Subsidiarietät"], hint:"Wie sagt man auf Deutsch \"sussidiarietà\"?"},
+  {word:"Bundesverfassung", tema:"Geschichte", wrong:["Bundesverfassun","Bundesverfasung"], hint:"Wie sagt man auf Deutsch \"Costituzione federale\"?"},
+  {word:"Eidgenossenschaft", tema:"Grundfakten", note:"Non è una traduzione letterale di \"confederazione\": è il termine storico/ufficiale usato per la Svizzera.", wrong:["Eidgenossenschft","Eidgenosseschaft"], hint:"Wie sagt man auf Deutsch \"Confederazione\" (der historische, offizielle Ausdruck)?"},
+  {word:"Regierungsrat", tema:"Regierung BS", note:"È il nome ufficiale del governo cantonale di Basel-Stadt, non una traduzione libera di \"governo cantonale\".", wrong:["Regierungrat","Regierungsrad"], hint:"Wie heisst die Kantonsregierung von Basel-Stadt auf Deutsch?"},
+  {word:"Bürgergemeinde", tema:"Bürgergemeinde", wrong:["Burgergemeinde","Bürgergemeide"], hint:"Wie sagt man auf Deutsch \"comunità borghese di Basilea\"?"},
+  {word:"Nationalrat", tema:"Volksrechte", wrong:["Nationalrad","Nazionalrat"], hint:"Wie sagt man auf Deutsch \"Consiglio Nazionale\"?"},
+  {word:"Ständerat", tema:"Volksrechte", wrong:["Standerat","Ständerad"], hint:"Wie sagt man auf Deutsch \"Consiglio degli Stati\"?"},
+  {word:"Departement", tema:"Bundesrat", wrong:["Departament","Departemant"], hint:"Wie sagt man auf Deutsch \"dipartimento\" (federale)?"},
+  {word:"Referendum", tema:"Volksrechte", wrong:["Referendom","Referändum"], hint:"Wie sagt man auf Deutsch \"referendum\"?"},
+  {word:"Milizsystem", tema:"Volksrechte", wrong:["Militzsystem","Milizsysten"], hint:"Wie sagt man auf Deutsch \"sistema di milizia\"?"},
+  {word:"Wahlspruch", tema:"Grundfakten", note:"Non è il motto stesso (\"Einer für alle, alle für einen\"): è la PAROLA tedesca che significa \"motto\".", wrong:["Wahlspruc","Whalspruch"], hint:"Wie heisst auf Deutsch das Wort für \"motto nazionale\"?"},
+  {word:"Schweizerpsalm", tema:"Grundfakten", note:"Attenzione: non è la traduzione letterale di \"inno nazionale\" (quella sarebbe un'altra parola). Serve il nome proprio e ufficiale dell'inno.", wrong:["Schweizerpslam","Schweitzerpsalm"], hint:"Wie heisst die Nationalhymne der Schweiz auf Deutsch?"},
+  {word:"Rätoromanisch", tema:"Grundfakten", wrong:["Rätoromanish","Retoromanisch"], hint:"Wie sagt man auf Deutsch \"romancio\" (Sprache)?"},
+  {word:"Morgestraich", tema:"Kultur", wrong:["Morgenstraich","Morgestreich"], hint:"Wie heisst der Beginn der Basler Fasnacht um 4 Uhr morgens?"},
+  {word:"Fasnacht", tema:"Kultur", wrong:["Fassnacht","Fasnacth"], hint:"Wie sagt man auf Deutsch \"Carnevale di Basilea\"?"},
+  {word:"Aschermittwoch", tema:"Kultur", wrong:["Ashermittwoch","Aschenmittwoch"], hint:"Wie sagt man auf Deutsch \"Mercoledì delle Ceneri\"?"},
+  {word:"Grosser Rat", tema:"Basel-Stadt", note:"Attenzione: non è la traduzione letterale di \"parlamento cantonale\". Il parlamento di Basel-Stadt ha un nome proprio specifico.", wrong:["Grosserat","Großer Rat"], hint:"Wie heisst das Kantonsparlament von Basel-Stadt?"},
+  {word:"Konfessionslos", tema:"Kultur", wrong:["Konfessionlos","Confessionslos"], hint:"Wie sagt man auf Deutsch \"senza confessione religiosa\"?"},
+  {word:"Verfassungsänderung", tema:"Volksrechte", wrong:["Verfassungsanderung","Verfassungsänderrung"], hint:"Wie sagt man auf Deutsch \"modifica costituzionale\"?"},
+  {word:"Bundeskanzler", tema:"Bundesrat", wrong:["Bundeskanzeler","Bundeskansler"], hint:"Wie sagt man auf Deutsch \"Cancelliere della Confederazione\"?"},
+  {word:"Halbkanton", tema:"Grundfakten", wrong:["Halbkantone","Halkanton"], hint:"Wie sagt man auf Deutsch \"semicantone\"?"},
+  {word:"Sonderbundskrieg", tema:"Geschichte", wrong:["Sonderbundkrieg","Sonderbundeskrieg"], hint:"Wie heisst der Bürgerkrieg von 1847 zwischen liberalen und konservativen Kantonen?"},
+
+  /* --- Bundesrat 2026 (nomi) --- */
+  {word:"Guy Parmelin", tema:"Bundesrat", wrong:["Guy Parmelen","Guy Parmellin"], hint:"Wer ist Bundespräsident 2026 und Vorsteher des WBF?"},
+  {word:"Ignazio Cassis", tema:"Bundesrat", wrong:["Ignazio Casis","Ignacio Cassis"], hint:"Wer ist Vizepräsident 2026 und Vorsteher des EDA?"},
+  {word:"Karin Keller-Sutter", tema:"Bundesrat", wrong:["Karin Keller-Suter","Karin Keler-Sutter"], hint:"Wer leitet das Finanzdepartement (EFD)?"},
+  {word:"Albert Rösti", tema:"Bundesrat", wrong:["Albert Rosti","Albert Röstie"], hint:"Wer leitet das UVEK?"},
+  {word:"Elisabeth Baume-Schneider", tema:"Bundesrat", wrong:["Elisabeth Baume-Schnaider","Elisabeth Baume-Shneider"], hint:"Wer leitet das Departement des Innern (EDI)?"},
+  {word:"Beat Jans", tema:"Bundesrat", wrong:["Beat Janz","Beat Jahns"], hint:"Wer leitet das Justiz- und Polizeidepartement (EJPD)?"},
+  {word:"Martin Pfister", tema:"Bundesrat", wrong:["Martin Pfster","Martin Phister"], hint:"Wer leitet das VBS?"},
+  {word:"Walter Thurnherr", tema:"Bundesrat", wrong:["Walter Thurnher","Walter Turnherr"], hint:"Wer war Bundeskanzler vor Viktor Rossi?"},
+
+  /* --- Regierungsrat Basel-Stadt (nomi) --- */
+  {word:"Conradin Cramer", tema:"Regierung BS", wrong:["Conradin Kramer","Conradin Cramar"], hint:"Welcher Regierungsrat (LDP) ist zugleich Regierungspräsident und leitet das Präsidialdepartement?"},
+  {word:"Lukas Engelberger", tema:"Regierung BS", wrong:["Lukas Engelberg","Lukas Engelbergr"], hint:"Welcher Regierungsrat (Die Mitte) leitet das Gesundheitsdepartement?"},
+  {word:"Tanja Soland", tema:"Regierung BS", wrong:["Tanja Solandt","Tania Soland"], hint:"Welche Regierungsrätin (SP) leitet das Finanzdepartement?"},
+  {word:"Stephanie Eymann", tema:"Regierung BS", wrong:["Stephanie Eyman","Stefanie Eymann"], hint:"Welche Regierungsrätin (LDP) leitet das Justiz- und Sicherheitsdepartement?"},
+  {word:"Kaspar Sutter", tema:"Regierung BS", wrong:["Kasper Sutter","Kaspar Suter"], hint:"Welcher Regierungsrat (SP) leitet das Departement für Wirtschaft, Soziales und Umwelt?"},
+  {word:"Esther Keller", tema:"Regierung BS", wrong:["Ester Keller","Esther Kellar"], hint:"Welche Regierungsrätin (GLP) leitet das Bau- und Verkehrsdepartement?"},
+  {word:"Mustafa Atici", tema:"Regierung BS", wrong:["Mustafa Attici","Mustafa Atice"], hint:"Welcher Regierungsrat (SP) leitet das Erziehungsdepartement?"},
+
+  /* --- Geografia e luoghi --- */
+  {word:"Dufourspitze", tema:"Grundfakten", wrong:["Dufourspitz","Dufourspize"], hint:"Wie heisst der höchste Punkt der Schweiz?"},
+  {word:"Genfersee", tema:"Geografia BS", wrong:["Genfelsee","Genffersee"], hint:"Wie heisst der grösste See der Schweiz?"},
+  {word:"Wasserschloss", tema:"Geografia BS", wrong:["Wasserschlos","Wasserschluss"], hint:"Wie sagt man auf Deutsch \"castello d'acqua\" d'Europa?"},
+  {word:"Rheinhafen", tema:"Geografia BS", wrong:["Reinhafen","Rheinhaffen"], hint:"Wie heisst der tiefste Punkt von Basel-Stadt?"},
+  {word:"Kleinhüningen", tema:"Geografia BS", wrong:["Kleinhuningen","Kleinhünigen"], hint:"In welchem Basler Quartier liegt der Rheinhafen?"},
+  {word:"St. Chrischona", tema:"Geografia BS", wrong:["St. Christona","St. Krischona"], hint:"Wie heisst der höchste Punkt von Basel-Stadt (in Bettingen)?"},
+  {word:"Augusta Raurica", tema:"Geografia BS", wrong:["Augusta Raurika","Augusta Raurca"], hint:"Wie hiess die römische Siedlung von 52 v. Chr.?"},
+
+  /* --- Storia --- */
+  {word:"Rütlischwur", tema:"Geschichte", wrong:["Rutlischwur","Rütlischwuhr"], hint:"Wie heisst der legendäre Schwur von 1291, anderer Name für den Bundesbrief?"},
+  {word:"Bundesbrief", tema:"Geschichte", note:"Attenzione: non è la traduzione letterale di \"patto federale\". Il documento del 1291 ha un nome proprio specifico usato nei testi ufficiali.", wrong:["Bundesbrif","Bundesbrieff"], hint:"Durch welches Dokument entstand die Eidgenossenschaft 1291 legendär?"},
+  {word:"Schwabenkrieg", tema:"Geschichte", wrong:["Schwabenkrig","Schwabenkriege"], hint:"Welcher Krieg ging 1499 dem Frieden zu Basel voraus?"},
+  {word:"Mediationsakte", tema:"Geschichte", wrong:["Mediazionsakte","Mediationsakt"], hint:"Wie hiess der napoleonische Akt von 1803?"},
+  {word:"Totalrevision", tema:"Geschichte", wrong:["Totalrevison","Totalrevisione"], hint:"Wie sagt man auf Deutsch \"revisione totale\" (der Verfassung)?"},
+  {word:"Proporzwahlrecht", tema:"Geschichte", wrong:["Proportzwahlrecht","Proporzwahlrechd"], hint:"Wie hiess das 1919 eingeführte Wahlsystem?"},
+  {word:"Frauenstimmrecht", tema:"Geschichte", wrong:["Frauenstimmrechd","Frauenstimrecht"], hint:"Wie sagt man auf Deutsch \"diritto di voto delle donne\"?"},
+  {word:"Weltzionistenkongress", tema:"Geschichte", wrong:["Weltzionistenkongres","Weltzionistkongress"], hint:"Welcher Kongress fand 1897 in Basel statt?"},
+  {word:"Theodor Herzl", tema:"Geschichte", wrong:["Theodor Hertzl","Teodor Herzl"], hint:"Wer leitete den ersten Weltzionistenkongress 1897 in Basel?"},
+
+  /* --- Personalità e cultura --- */
+  {word:"Erasmus von Rotterdam", tema:"Kultur", wrong:["Erasmus von Roterdam","Erasmus von Rottedam"], hint:"Welcher Humanist ist mit Basel verbunden?"},
+  {word:"Paracelsus", tema:"Kultur", wrong:["Paracelus","Paracellsus"], hint:"Welcher Mediziner der Renaissance ist mit Basel verbunden?"},
+  {word:"Friedrich Nietzsche", tema:"Kultur", wrong:["Friedrich Nitzsche","Friedrich Nietsche"], hint:"Welcher Philosoph ist mit Basel verbunden?"},
+  {word:"Jacob Burckhardt", tema:"Kultur", wrong:["Jakob Burckhardt","Jacob Burkhardt"], hint:"Welcher Historiker ist mit Basel verbunden?"},
+  {word:"Friedrich Miescher", tema:"Kultur", wrong:["Friedrich Mischer","Friedrich Miesher"], hint:"Wer entdeckte die DNA und ist mit Basel verbunden?"},
+  {word:"Fondation Beyeler", tema:"Kultur", wrong:["Fondation Beyler","Foundation Beyeler"], hint:"Welches Museum befindet sich in Riehen?"},
+  {word:"Kunstmuseum", tema:"Kultur", wrong:["Kunstmuseeum","Kunstmusum"], hint:"Wie heisst die älteste öffentliche Kunstsammlung der Welt, in Basel?"},
+  {word:"Marktplatz", tema:"Geografia BS", wrong:["Marktplaz","Markplatz"], hint:"Wie heisst der Platz vor dem Rathaus in Basel?"},
+  {word:"Waisenhaus", tema:"Bürgergemeinde", wrong:["Weisenhaus","Waisenhauss"], hint:"Wie sagt man auf Deutsch \"orfanotrofio\" (der Bürgergemeinde)?"},
+  {word:"Bürgerspital", tema:"Bürgergemeinde", wrong:["Burgerspital","Bürgerspittal"], hint:"Wie heisst das historische Bürgerspital von Basel (Abkürzung BSB)?"},
+  {word:"Christoph Merian Stiftung", tema:"Bürgergemeinde", wrong:["Christof Merian Stiftung","Christoph Merian Stifftung"], hint:"Wie heisst die Stiftung unter Aufsicht der Bürgergemeinde?"},
+  {word:"Bürgergemeinderat", tema:"Bürgergemeinde", wrong:["Burgergemeinderat","Bürgergemeindrat"], hint:"Wie heisst das Parlament der Bürgergemeinde (40 Mitglieder)?"},
+  {word:"Confoederatio Helvetica", tema:"Grundfakten", wrong:["Confoederatio Helvetika","Confederatio Helvetica"], hint:"Wie lautet der lateinische Name, aus dem \"CH\" stammt?"},
+
+  /* --- Partiti politici svizzeri (nomi completi) --- */
+  {word:"Schweizerische Volkspartei", tema:"Bundesrat", wrong:["Schweizerische Volksparthei","Schweizerische Volkspartey"], hint:"Wie heisst die Partei SVP ausgeschrieben?"},
+  {word:"FDP.Die Liberalen", tema:"Bundesrat", wrong:["FDP. Die Liberale","FDP.Die Liberallen"], hint:"Wie heisst die Partei FDP ausgeschrieben?"},
+  {word:"Sozialdemokratische Partei", tema:"Bundesrat", wrong:["Sozialdemokratsche Partei","Socialdemokratische Partei"], hint:"Wie heisst die Partei SP ausgeschrieben?"},
+  {word:"Die Mitte", tema:"Bundesrat", wrong:["Die Mite","Die Midte"], hint:"Welcher Partei gehören Martin Pfister und Lukas Engelberger an?"},
+  {word:"Grünliberale Partei", tema:"Bundesrat", wrong:["Grünliberalle Partei","Grünliberale Parthei"], hint:"Wie heisst die Partei GLP ausgeschrieben?"},
+  {word:"Liberal-Demokratische Partei", tema:"Basel-Stadt", wrong:["Liberal-Demokratsche Partei","Liberale-Demokratische Partei"], hint:"Wie heisst die Partei LDP in Basel ausgeschrieben?"},
+
+  /* --- Cariche politiche --- */
+  {word:"Bundespräsident", tema:"Bundesrat", wrong:["Bundespräsidend","Bundespräsidant"], hint:"Wie sagt man auf Deutsch \"Presidente della Confederazione\"?"},
+  {word:"Vizepräsident", tema:"Bundesrat", wrong:["Vizepräsidend","Vicepräsident"], hint:"Wie sagt man auf Deutsch \"Vicepresidente\" (des Bundesrates)?"},
+  {word:"Departementsvorsteher", tema:"Bundesrat", wrong:["Departementsvorsteer","Departementvorsteher"], hint:"Wie sagt man auf Deutsch \"capo di un dipartimento federale\"?"},
+  {word:"Regierungspräsident", tema:"Regierung BS", wrong:["Regierungspräsidend","Regierungspräsidant"], note:"Non tradurre parola per parola: è il titolo ufficiale del presidente del governo cantonale.", hint:"Wie heisst der Präsident der Basler Kantonsregierung?"},
+  {word:"Gerichtspräsidium", tema:"Regierung BS", wrong:["Gerichtspräsidum","Gerichtpräsidium"], hint:"Wie sagt man auf Deutsch \"presidenza di un tribunale cantonale\"?"},
+  {word:"Bürgerrat", tema:"Bürgergemeinde", wrong:["Burgerrat","Bürgerrad"], note:"Non è il \"Bürgergemeinderat\" (il parlamento): è l'esecutivo della Bürgergemeinde, 7 membri.", hint:"Wie heisst die Exekutive der Bürgergemeinde (7 Mitglieder)?"},
+
+  /* --- Membri del Bundesrat / Regierungsrat aggiuntivi --- */
+  {word:"Viktor Rossi", tema:"Bundesrat", wrong:["Victor Rossi","Viktor Rosi"], hint:"Wer ist Bundeskanzler seit 2024?"},
+  {word:"Roger Federer", tema:"Kultur", wrong:["Roger Federrer","Roger Fédérer"], hint:"Welcher berühmte Tennisspieler ist mit Basel verbunden?"},
+
+  /* --- Fiumi --- */
+  {word:"Rhein", tema:"Grundfakten", wrong:["Rein","Rheihn"], hint:"Wie heisst der wichtigste Fluss der Schweiz?"},
+  {word:"Reuss", tema:"Grundfakten", wrong:["Ruess","Reus"], hint:"Wie heisst der Fluss im Kanton Uri?"},
+  {word:"Rhône", tema:"Grundfakten", wrong:["Rhone","Rhône "], hint:"Wie heisst der Fluss, der aus dem gleichnamigen Gletscher entspringt?"},
+  {word:"Birs", tema:"Geografia BS", wrong:["Birrs","Birz"], hint:"Wie heisst einer der drei Flüsse, die durch Basel-Stadt fliessen?"},
+  {word:"Birsig", tema:"Geografia BS", wrong:["Birzig","Birsieg"], hint:"Wie heisst einer der drei Flüsse, die durch Basel-Stadt fliessen?"},
+  {word:"Wiese", tema:"Geografia BS", wrong:["Wiesse","Wiehse"], note:"Attenzione: è il nome proprio del fiume, non la parola tedesca per \"prato\".", hint:"Wie heisst einer der drei Flüsse, die durch Basel-Stadt fliessen?"},
+
+  /* --- Monti e vette --- */
+  {word:"Matterhorn", tema:"Grundfakten", wrong:["Matterhorm","Materhorn"], hint:"Wie heisst der berühmte Berg bei Zermatt?"},
+  {word:"Jungfrau", tema:"Grundfakten", wrong:["Jungfrauh","Junfrau"], hint:"Wie heisst einer der UNESCO-Weltnaturerbe-Gipfel in den Berner Alpen (mit Eiger und Mönch)?"},
+  {word:"Mönch", tema:"Grundfakten", wrong:["Moench","Mönck"], hint:"Wie heisst der Gipfel zwischen Eiger und Jungfrau?"},
+  {word:"Pilatus", tema:"Grundfakten", wrong:["Pilathus","Pillatus"], hint:"Wie heisst der Berg bei Luzern?"},
+  {word:"Mischabelgruppe", tema:"Grundfakten", wrong:["Mischabelgrupe","Mischabelgruppen"], hint:"Wie heisst die Walliser Berggruppe, zu der der Dom gehört?"},
+
+  /* --- Laghi --- */
+  {word:"Neuenburgersee", tema:"Grundfakten", wrong:["Neuenburgesee","Neuenburgersehe"], hint:"Wie heisst der grösste vollständig in der Schweiz liegende See?"},
+  {word:"Bodensee", tema:"Grundfakten", wrong:["Bodensehe","Boddensee"], hint:"Wie heisst der See bei St. Gallen?"},
+  {word:"Vierwaldstättersee", tema:"Grundfakten", wrong:["Vierwaldstättersehe","Vierwaltstättersee"], hint:"Wie heisst der See bei Luzern?"},
+
+  /* --- Comuni confinanti con Basel-Stadt --- */
+  {word:"Birsfelden", tema:"Geografia BS", wrong:["Birsfeldenn","Birsfelde"], hint:"Welche Gemeinde von Basel-Landschaft grenzt an Basel-Stadt?"},
+  {word:"Muttenz", tema:"Geografia BS", wrong:["Muttentz","Muthenz"], hint:"Welche Gemeinde von Basel-Landschaft grenzt an Basel-Stadt?"},
+  {word:"Münchenstein", tema:"Geografia BS", wrong:["Munchenstein","Münchestein"], hint:"Welche Gemeinde von Basel-Landschaft grenzt an Basel-Stadt?"},
+  {word:"Allschwil", tema:"Geografia BS", wrong:["Allschwiel","Alschwil"], hint:"Welche Gemeinde von Basel-Landschaft grenzt an Basel-Stadt?"},
+  {word:"Weil am Rhein", tema:"Geografia BS", wrong:["Weil am Rein","Weil an Rhein"], hint:"Welche deutsche Gemeinde grenzt an Basel-Stadt?"},
+  {word:"Lörrach", tema:"Geografia BS", wrong:["Lörach","Loerrach"], hint:"Welche deutsche Gemeinde grenzt an Basel-Stadt?"},
+  {word:"Saint-Louis", tema:"Geografia BS", wrong:["St.-Louis","Saint Louis"], hint:"Welche französische Gemeinde grenzt an Basel-Stadt?"},
+  {word:"Huningue", tema:"Geografia BS", wrong:["Huninge","Hunningue"], hint:"Welche französische Gemeinde grenzt an Basel-Stadt?"},
+
+  /* --- Tribunali federali e cantonali --- */
+  {word:"Bundesgericht", tema:"Volksrechte", wrong:["Bundesgerichd","Bundesgerricht"], hint:"Wie heisst das oberste Gericht der Schweiz (Sitz Lausanne)?"},
+  {word:"Bundesstrafgericht", tema:"Volksrechte", wrong:["Bundesstraffgericht","Bundestrafgericht"], hint:"Wie heisst das Bundesstrafgericht (Sitz Bellinzona)?"},
+  {word:"Bundesverwaltungsgericht", tema:"Volksrechte", wrong:["Bundesverwaltunsgericht","Bundesverwaltungsgerricht"], hint:"Wie heisst das Bundesverwaltungsgericht (Sitz St. Gallen)?"},
+  {word:"Appellationsgericht", tema:"Regierung BS", wrong:["Appelationsgericht","Appellazionsgericht"], hint:"Wie heisst das kantonale Appellationsgericht von Basel-Stadt?"},
+
+  /* --- Date chiave (anni) --- */
+  {word:"1291", tema:"Grundfakten", wrong:["1291".split("").reverse().join(""),"1921"], hint:"In welchem Jahr entstand die Eidgenossenschaft legendär (Bundesbrief)?"},
+  {word:"1848", tema:"Geschichte", wrong:["1884","1848".split("").reverse().join("")], hint:"In welchem Jahr entstand die erste Bundesverfassung?"},
+  {word:"1874", tema:"Geschichte", wrong:["1847","1747"], hint:"In welchem Jahr fand die erste Totalrevision der Bundesverfassung statt?"},
+  {word:"1891", tema:"Geschichte", wrong:["1819","1981"], hint:"In welchem Jahr wurde die Volksinitiative auf Bundesebene eingeführt?"},
+  {word:"1919", tema:"Geschichte", wrong:["1991","1918"], hint:"In welchem Jahr wurde das Proporzwahlrecht eingeführt?"},
+  {word:"1971", tema:"Geschichte", wrong:["1917","1791"], hint:"In welchem Jahr erhielten Frauen das Stimmrecht auf Bundesebene?"},
+  {word:"1979", tema:"Geschichte", wrong:["1997","1978"], hint:"In welchem Jahr wurde der Kanton Jura gegründet?"},
+  {word:"2002", tema:"Geschichte", wrong:["2020","2012"], hint:"In welchem Jahr trat die Schweiz der UNO bei?"},
+
+  /* =========================================================
+     ESPANSIONE CAPITOLO 1 — GRUNDFAKTEN (fondamenti e simboli)
+     ========================================================= */
+  {word:"Bundesbrief", tema:"Grundfakten", wrong:["Bundesbrif","Bundesbrieff"], hint:"Durch welches Dokument entstand die Eidgenossenschaft 1291 legendär?"},
+  {word:"Rütlischwur", tema:"Grundfakten", wrong:["Rutlischwur","Rütlischwuhr"], hint:"Wie heisst der legendäre Schwur von 1291 (anderer Name für den Bundesbrief)?"},
+  {word:"Bundesstaat", tema:"Grundfakten", wrong:["Bundstaat","Bundesstadt"], hint:"Was entstand 1848, zusätzlich zur ersten Bundesverfassung?"},
+  {word:"1848", tema:"Grundfakten", wrong:["1884","1948"], hint:"Wann entstand der moderne Bundesstaat?"},
+  {word:"Alpen, Mittelland und Jura", tema:"Grundfakten", wrong:["Alpen, Mittellandt und Jura","Alpen, Mittelland und Jurah"], hint:"In welche drei Hauptregionen ist die Schweiz unterteilt (60% / 30% / 10%)?"},
+  {word:"Wasserschloss Europas", tema:"Grundfakten", wrong:["Wasserschloss Europa","Wasserschloß Europas"], hint:"Wie wird die Schweiz wegen ihrer Wasserreserven genannt?"},
+  {word:"Süsswasserreserven", tema:"Grundfakten", wrong:["Süsswasserreserve","Süswasserreserven"], hint:"Wovon besitzt die Schweiz 6% Europas?"},
+  {word:"4'634", tema:"Grundfakten", wrong:["4'643","4'364"], hint:"Wie hoch ist die Dufourspitze in Metern?"},
+  {word:"im Wallis", tema:"Grundfakten", wrong:["im Wallies","im Walis"], hint:"In welchem Kanton liegt die Dufourspitze?"},
+  {word:"Lago Maggiore", tema:"Grundfakten", wrong:["Lago Maggiori","Lago Magiore"], hint:"An welchem See liegt der tiefste Punkt der Schweiz, der auch bei Locarno liegt?"},
+  {word:"9 Millionen", tema:"Grundfakten", wrong:["9 Millioner","19 Millionen"], hint:"Wie viele Menschen leben ungefähr in der Schweiz?"},
+  {word:"2,25 Millionen", tema:"Grundfakten", wrong:["2,25 Million","22,5 Millionen"], hint:"Wie viele Ausländerinnen und Ausländer lebten 2022 ungefähr in der Schweiz?"},
+  {word:"Regierung und Parlament", tema:"Grundfakten", wrong:["Regierung und Parlamant","Regirung und Parlament"], hint:"Wer hat seinen Sitz im Bundeshaus in Bern?"},
+  {word:"Bundeshaus", tema:"Grundfakten", wrong:["Bundeshauss","Bundeshaus "], hint:"Wie heisst das Gebäude in Bern, in dem Regierung und Parlament sitzen?"},
+  {word:"26", tema:"Grundfakten", wrong:["25","27"], hint:"Wie viele Kantone hat die Schweiz insgesamt?"},
+  {word:"6", tema:"Grundfakten", wrong:["7","5"], hint:"Wie viele Kantone haben nur einen Sitz im Ständerat (ehemalige Halbkantone)?"},
+  {word:"Ständerat", tema:"Grundfakten", wrong:["Standerat","Ständerad"], hint:"In welcher Parlamentskammer haben die (ehemaligen) Halbkantone nur einen Sitz?"},
+  {word:"Ticino", tema:"Grundfakten", wrong:["Tessin","Tichino"], hint:"Wie heisst der Fluss bei Bellinzona (Achtung: auch ein Kantonsname)?"},
+
+  /* =========================================================
+     ESPANSIONE ALTRI CAPITOLI — parole chiave estese
+     ========================================================= */
+  {word:"Heinrich von Thun", tema:"Geschichte", wrong:["Heinrich von Tun","Heinrich von Thunn"], hint:"Wer baute die Mittlere Rheinbrücke (1225/26)?"},
+  {word:"Mittlere Rheinbrücke", tema:"Geschichte", wrong:["Mittlere Rheinbrucke","Mittlere Rheinbrüke"], hint:"Wie hiess die erste Rheinbrücke in Basel (1225/26)?"},
+  {word:"Basilia", tema:"Geschichte", wrong:["Basillia","Basilja"], hint:"Unter welchem Namen wurde Basel 374 n. Chr. erstmals erwähnt?"},
+  {word:"Grosses Erdbeben", tema:"Geschichte", wrong:["Grosses Erdbebn","Grosses Ertbeben"], hint:"Welches Ereignis zerstörte 1356 fast ganz Basel?"},
+  {word:"1356", tema:"Geschichte", wrong:["1365","1536"], hint:"In welchem Jahr fand das Grosse Erdbeben von Basel statt?"},
+  {word:"1460", tema:"Geschichte", wrong:["1640","1406"], hint:"In welchem Jahr wurde die Universität Basel gegründet?"},
+  {word:"Papst Pius II", tema:"Geschichte", wrong:["Papst Pius II.","Papst Pio II"], hint:"Welcher Papst gründete die Universität Basel?"},
+  {word:"1501", tema:"Geschichte", wrong:["1510","1051"], hint:"In welchem Jahr trat Basel der Eidgenossenschaft bei?"},
+  {word:"1315", tema:"Geschichte", wrong:["1351","1135"], hint:"In welchem Jahr fand die Schlacht am Morgarten statt?"},
+  {word:"1499", tema:"Geschichte", wrong:["1949","1494"], hint:"In welchem Jahr wurde der Frieden zu Basel geschlossen?"},
+  {word:"Heiliges Römisches Reich", tema:"Geschichte", wrong:["Heiliges Römisches Reisch","Heiliges Romisches Reich"], hint:"Von welchem Reich erlangte die Schweiz 1499 die faktische Unabhängigkeit?"},
+  {word:"1529", tema:"Geschichte", wrong:["1592","1259"], hint:"In welchem Jahr wurde Basel protestantisch?"},
+  {word:"1648", tema:"Geschichte", wrong:["1684","1846"], hint:"In welchem Jahr wurde die Unabhängigkeit der Schweiz mit dem Westfälischen Frieden anerkannt?"},
+  {word:"1798", tema:"Geschichte", wrong:["1789","1978"], hint:"In welchem Jahr erfolgte die französische Invasion und die Gründung der Helvetischen Republik?"},
+  {word:"Helvetische Republik", tema:"Geschichte", wrong:["Helvetsche Republik","Helvetische Republic"], hint:"Wie hiess der 1798 gegründete zentralistische Einheitsstaat?"},
+  {word:"19 Kantonen", tema:"Geschichte", wrong:["18 Kantonen","91 Kantonen"], hint:"Aus wie vielen Kantonen bestand die Schweiz nach der Mediationsakte von 1803?"},
+  {word:"Wiener Kongress", tema:"Geschichte", wrong:["Wiener Kongres","Wienner Kongress"], hint:"An welchem Kongress von 1815 wurden die heutigen Grenzen der Schweiz festgelegt?"},
+  {word:"22 Kantonen", tema:"Geschichte", wrong:["23 Kantonen","21 Kantonen"], hint:"Wie viele Kantone zählte die Schweiz nach dem Wiener Kongress von 1815?"},
+  {word:"1833", tema:"Geschichte", wrong:["1383","1863"], hint:"In welchem Jahr wurde der Kanton Basel in Basel-Stadt und Basel-Landschaft getrennt?"},
+  {word:"1966", tema:"Geschichte", wrong:["1969","1996"], hint:"In welchem Jahr erhielten Frauen in Basel-Stadt bereits das kantonale Stimmrecht?"},
+  {word:"Kelten", tema:"Geschichte", wrong:["Kelthen","Celten"], hint:"Welches Volk siedelte zuerst auf dem Münsterhügel in Basel?"},
+  {word:"Münsterhügel", tema:"Geschichte", wrong:["Münsterhügl","Munsterhügel"], hint:"Auf welchem Hügel hatten die ersten Siedler (Kelten) einen Zufluchtsort?"},
+  {word:"Letzimauer", tema:"Geschichte", wrong:["Letzimaur","Letzimauwer"], hint:"Wie heisst ein erhaltener Rest der alten Basler Stadtbefestigung?"},
+  {word:"Spalentor", tema:"Geschichte", wrong:["Spallentor","Spalentohr"], hint:"Wie heisst eines der bis heute erhaltenen historischen Stadttore von Basel?"},
+  {word:"7 Mitgliedern", tema:"Bundesrat", wrong:["8 Mitgliedern","7 Mitgliedren"], hint:"Aus wie vielen Mitgliedern besteht der Bundesrat?"},
+  {word:"Bundeskanzlei", tema:"Bundesrat", wrong:["Bundeskanzlei ","Bundeskanzlai"], hint:"Welches Organ wird vom Bundeskanzler als Stabschef des Bundesrates geleitet?"},
+  {word:"Föderalismus", tema:"Volksrechte", wrong:["Foederalismus","Föderalismuss"], hint:"Wie sagt man auf Deutsch \"federalismo\" (Prinzip der Machtaufteilung)?"},
+  {word:"18 Jahren", tema:"Volksrechte", wrong:["81 Jahren","18 Jahre"], hint:"Ab welchem Alter hat man das Stimm- und Wahlrecht?"},
+  {word:"Gewaltenteilung", tema:"Volksrechte", wrong:["Gewaltenteillung","Gewalteteilung"], hint:"Wie sagt man auf Deutsch \"separazione dei poteri\"?"},
+  {word:"Legislative", tema:"Volksrechte", wrong:["Legislativ","Legeslative"], hint:"Wie sagt man auf Deutsch \"potere legislativo\" (Parlament)?"},
+  {word:"Exekutive", tema:"Volksrechte", wrong:["Exekutiv","Exsekutive"], hint:"Wie sagt man auf Deutsch \"potere esecutivo\" (Regierung)?"},
+  {word:"Judikative", tema:"Volksrechte", wrong:["Judikativ","Judicative"], hint:"Wie sagt man auf Deutsch \"potere giudiziario\" (Gerichte)?"},
+  {word:"50'000", tema:"Volksrechte", wrong:["5'000","500'000"], hint:"Wie viele Unterschriften braucht ein fakultatives Referendum?"},
+  {word:"18 Monaten", tema:"Volksrechte", wrong:["81 Monaten","18 Monate"], hint:"Innerhalb welcher Frist müssen die Unterschriften für eine Volksinitiative gesammelt werden?"},
+  {word:"100 Tagen", tema:"Volksrechte", wrong:["1000 Tagen","10 Tagen"], hint:"Innerhalb welcher Frist müssen die Unterschriften für ein fakultatives Referendum gesammelt werden?"},
+  {word:"200 Mitgliedern", tema:"Volksrechte", wrong:["2000 Mitgliedern","20 Mitgliedern"], hint:"Wie viele Mitglieder hat der Nationalrat?"},
+  {word:"46 Mitgliedern", tema:"Volksrechte", wrong:["64 Mitgliedern","46 Mitglidern"], hint:"Wie viele Mitglieder hat der Ständerat?"},
+  {word:"37 km²", tema:"Basel-Stadt", wrong:["73 km²","37 km"], hint:"Wie gross ist der Kanton Basel-Stadt (kleinster Kanton der Schweiz)?"},
+  {word:"Riehen und Bettingen", tema:"Basel-Stadt", wrong:["Riehen und Betingen","Rihen und Bettingen"], hint:"Aus welchen zwei Gemeinden besteht Basel-Stadt zusätzlich zur Stadt Basel?"},
+  {word:"Präsidialdepartement", tema:"Basel-Stadt", wrong:["Präsidialdepartament","Präsidialdepartemant"], hint:"Welches Departement leitet Conradin Cramer als Regierungspräsident?"},
+  {word:"Bau- und Verkehrsdepartement", tema:"Basel-Stadt", wrong:["Bau und Verkehrsdepartement","Bau- und Verkehrsdepartament"], hint:"Welches Departement leitet Esther Keller?"},
+  {word:"Erziehungsdepartement", tema:"Basel-Stadt", wrong:["Erzihungsdepartement","Erziehungsdepartament"], hint:"Welches Departement leitet Mustafa Atici?"},
+  {word:"Gesundheitsdepartement", tema:"Basel-Stadt", wrong:["Gesundheitsdepartament","Gesundheitdepartement"], hint:"Welches Departement leitet Lukas Engelberger?"},
+  {word:"Justiz- und Sicherheitsdepartement", tema:"Basel-Stadt", wrong:["Justiz und Sicherheitsdepartement","Justiz- und Sicherheitdepartement"], hint:"Welches Departement leitet Stephanie Eymann?"},
+  {word:"200'000", tema:"Regierung BS", wrong:["20'000","2'000'000"], hint:"Wie viele Einwohner hatte der Kanton Basel-Stadt 2023?"},
+  {word:"166 Ländern", tema:"Regierung BS", wrong:["116 Ländern","166 Länder"], hint:"Aus wie vielen Ländern stammen die in Basel-Stadt lebenden Ausländer?"},
+  {word:"4 Jahre", tema:"Regierung BS", wrong:["14 Jahre","40 Jahre"], hint:"Für welche Amtsdauer wird der Regierungsrat von Basel-Stadt gewählt?"},
+  {word:"2028", tema:"Regierung BS", wrong:["2082","2026"], hint:"In welchem Jahr finden die nächsten Wahlen des Regierungsrats statt?"},
+  {word:"Zivilgericht", tema:"Regierung BS", wrong:["Zivielgericht","Zivilgerricht"], hint:"Wie heisst eines der kantonalen Gerichte in der Bäumleingasse?"},
+  {word:"Sozialversicherungsgericht", tema:"Regierung BS", wrong:["Sozialversicherungsgerricht","Sozialversicherugsgericht"], hint:"Wie heisst das kantonale Gericht für Sozialversicherungen?"},
+  {word:"Strafgericht", tema:"Regierung BS", wrong:["Straffgericht","Strafgerricht"], hint:"Wie heisst das Basler Gericht an der Schützenmattstrasse?"},
+  {word:"40 Mitglieder", tema:"Bürgergemeinde", wrong:["4 Mitglieder","40 Mitgliedern"], hint:"Wie viele Mitglieder hat der Bürgergemeinderat?"},
+  {word:"6 Jahre", tema:"Bürgergemeinde", wrong:["16 Jahre","60 Jahre"], hint:"Alle wie viele Jahre wird der Bürgergemeinderat gewählt?"},
+  {word:"46'500", tema:"Bürgergemeinde", wrong:["4'650","465'00"], hint:"Wie viele stimmberechtigte Bürgerinnen und Bürger hat die Bürgergemeinde?"},
+  {word:"54'000", tema:"Bürgergemeinde", wrong:["5'400","540'00"], hint:"Wie viele Personen besitzen insgesamt das Basler Bürgerrecht?"},
+  {word:"Christoph Merian Stiftung", tema:"Bürgergemeinde", wrong:["Christoph Merian Stifftung","Christof Merian Stiftung"], hint:"Welche Stiftung steht unter Aufsicht der Bürgergemeinde?"},
+  {word:"Zentrale Dienste", tema:"Bürgergemeinde", wrong:["Zentralle Dienste","Zentrale Diensten"], hint:"Welches Organ der Bürgergemeinde ist für Einbürgerungen und Vermögensverwaltung zuständig?"},
+  {word:"Hardwald", tema:"Bürgergemeinde", wrong:["Hartwald","Hardwaldt"], hint:"Wie heisst der von der Bürgergemeinde verwaltete Wald (auch Birsfelder Hard genannt)?"},
+  {word:"1500 Mitarbeitenden", tema:"Bürgergemeinde", wrong:["150 Mitarbeitenden","15'000 Mitarbeitenden"], hint:"Wie viele Mitarbeitende hat das Bürgerspital Basel ungefähr?"},
+  {word:"Aargau, Solothurn", tema:"Geografia BS", wrong:["Aargau, Solothurn ","Argau, Solothurn"], hint:"Welche zwei Kantone gehören neben BS/BL und teilweise Jura zur Nordwestschweiz?"},
+  {word:"Regio Basiliensis", tema:"Geografia BS", wrong:["Regio Basiliensiss","Regio Basilensis"], hint:"Wie heisst die Region um Basel, wo drei Länder aufeinandertreffen?"},
+  {word:"Dreiland", tema:"Geografia BS", wrong:["Dreiländer","Dreilandt"], hint:"Wie wird die Regio Basiliensis auch genannt?"},
+  {word:"245 m ü. M.", tema:"Geografia BS", wrong:["254 m ü. M.","425 m ü. M."], hint:"Wie hoch liegt der Rheinhafen, der tiefste Punkt von Basel-Stadt?"},
+  {word:"522 m ü. M.", tema:"Geografia BS", wrong:["225 m ü. M.","552 m ü. M."], hint:"Wie hoch liegt St. Chrischona, der höchste Punkt von Basel-Stadt?"},
+  {word:"Roche und Novartis", tema:"Kultur", wrong:["Roche und Novatis","Roshe und Novartis"], hint:"Welche zwei grossen Pharmaunternehmen haben ihren Sitz in Basel?"},
+  {word:"Baselworld", tema:"Kultur", wrong:["Baselwold","Baselworldt"], hint:"Wie heisst die Uhren- und Schmuckmesse in Basel?"},
+  {word:"Art Basel", tema:"Kultur", wrong:["Art Basle","Arte Basel"], hint:"Wie heisst die grosse Kunstmesse in Basel?"},
+  {word:"1471", tema:"Kultur", wrong:["1417","1741"], hint:"Seit welchem Jahr besitzt die Basler Herbstmesse Marktrechte?"},
+  {word:"drey scheenschte Dääg", tema:"Kultur", wrong:["drei scheenschte Dääg","drey scheensteh Dääg"], hint:"Wie wird die Basler Fasnacht im Dialekt genannt (\"die drei schönsten Tage\")?"},
+  {word:"72 Stunden", tema:"Kultur", wrong:["27 Stunden","72 Stundenn"], hint:"Wie lange dauert die Basler Fasnacht?"},
+  {word:"40 Museen", tema:"Kultur", wrong:["4 Museen","400 Museen"], hint:"Wie viele Museen gibt es ungefähr in Basel?"},
+  {word:"47%", tema:"Kultur", wrong:["74%","4,7%"], hint:"Wie hoch ist der Anteil der Konfessionslosen in Basel ungefähr?"},
+
+  /* =========================================================
+     DOMANDE "AL CONTRARIO" — stessi fatti, direzione opposta
+     (fiumi, monti, laghi: dato il luogo, indovina il nome e viceversa)
+     ========================================================= */
+  {word:"Uri", tema:"Grundfakten", wrong:["Ury","Uri "], hint:"In welchem Kanton fliesst die Reuss?"},
+  {word:"Bellinzona", tema:"Grundfakten", wrong:["Belinzona","Bellinzonna"], hint:"Bei welcher Stadt fliesst der Ticino?"},
+  {word:"Birs, Birsig und Wiese", tema:"Geografia BS", wrong:["Birs, Birsig und Wiesse","Birs, Birsieg und Wiese"], hint:"Welche drei Flüsse fliessen durch Basel-Stadt (und münden alle in den Rhein)?"},
+  {word:"Zermatt", tema:"Grundfakten", wrong:["Zermat","Zermatt "], hint:"Bei welchem Ort liegt das Matterhorn?"},
+  {word:"Berner Alpen", tema:"Grundfakten", wrong:["Berner Alppen","Bernen Alpen"], hint:"In welchem Gebirge liegen Eiger, Mönch und Jungfrau (UNESCO-Weltnaturerbe)?"},
+  {word:"Eiger und Jungfrau", tema:"Grundfakten", wrong:["Eiger und Jungfrauh","Eigger und Jungfrau"], hint:"Welche zwei Gipfel begrenzen den Mönch?"},
+  {word:"Luzern", tema:"Grundfakten", wrong:["Luzernn","Luzzern"], hint:"Bei welcher Stadt liegt der Pilatus?"},
+  {word:"Dom", tema:"Grundfakten", wrong:["Dohm","Domm"], hint:"Wie heisst der höchste Gipfel der Mischabelgruppe im Wallis (4'545 m)?"},
+  {word:"St. Gallen", tema:"Grundfakten", wrong:["St.Gallen","Sankt Gallen"], hint:"Bei welcher Stadt liegt der Bodensee?"},
+  {word:"Luzern", tema:"Grundfakten", wrong:["Luzernn ","Luzzernn"], hint:"Bei welcher Stadt liegt der Vierwaldstättersee?"},
+  {word:"Locarno", tema:"Grundfakten", wrong:["Locarno ","Locarnno"], hint:"Bei welcher Stadt liegt der Lago Maggiore?"}
+];
+
+/* Statistiche di ortografia: memorizzano se l'ultima risposta per ogni parola è stata giusta o sbagliata */
+const SPELL_STATS_KEY = "burgertest_spell_stats_v1";
+function loadSpellStats(){ try{ return JSON.parse(localStorage.getItem(SPELL_STATS_KEY)) || {}; } catch(e){ return {}; } }
+function saveSpellStats(s){ localStorage.setItem(SPELL_STATS_KEY, JSON.stringify(s)); queueCloudSync(); }
+function markSpellResult(word, correct){
+  const s = loadSpellStats();
+  s[word] = correct ? "correct" : "wrong";
+  saveSpellStats(s);
+}
+function spellWeight(word){
+  const status = loadSpellStats()[word];
+  if(status === "correct") return 1;   // già indovinate: ripetute meno spesso
+  return 3;                             // sbagliate o mai viste: ripetute più spesso
+}
+
+let spellQueue = []; let spellLast = null;
+function drawSpelling(){
+  const scopeTemi = getSpellScopeTemi();
+  const scope = SPELLING_QUIZ.filter(w => scopeTemi.includes(w.tema));
+  if(scope.length === 0) return null;
+  if(spellQueue.length===0 || !spellQueue.every(w=>scope.includes(w))){
+    // ricostruisce la coda pesata: le parole sbagliate/non ancora indovinate compaiono più volte
+    let weighted = [];
+    scope.forEach(w=>{ for(let i=0;i<spellWeight(w.word);i++) weighted.push(w); });
+    spellQueue = shuffle(weighted);
+    if(spellQueue.length>1 && spellQueue[0]===spellLast){ [spellQueue[0],spellQueue[1]] = [spellQueue[1],spellQueue[0]]; }
+  }
+  const item = spellQueue.shift(); spellLast = item; return item;
+}
+let currentSpellItem = null;
+let spellRevealed = false;
+
+function resetSpellUI(){
+  document.getElementById("spell-input").value = "";
+  document.getElementById("spell-input").disabled = false;
+  document.getElementById("spell-feedback").textContent = "";
+  document.getElementById("spell-options").innerHTML = "";
+  document.getElementById("spell-continue").style.display = "none";
+  spellRevealed = false;
+}
+function updateSpellScore(){
+  const scoreEl = document.getElementById("spell-score");
+  if(!scoreEl) return;
+  const scopeTemi = getSpellScopeTemi();
+  const scope = SPELLING_QUIZ.filter(w => scopeTemi.includes(w.tema));
+  if(scope.length === 0){ scoreEl.textContent = ""; return; }
+  const stats = loadSpellStats();
+  const correct = scope.filter(w => stats[w.word] === "correct").length;
+  scoreEl.textContent = correct + " / " + scope.length + " indovinate";
+}
+function renderSpellScopeSelector(){
+  const wrap = document.getElementById("spell-scope-wrap");
+  const sel = document.getElementById("spell-scope-select");
+  if(!wrap || !sel) return;
+  wrap.style.display = "block";
+  const mastered = getMasteredChapters().map(c=>c.id);
+  const current = loadSpellScope();
+  sel.innerHTML = "";
+  const optAll = document.createElement("option");
+  optAll.value = "all";
+  optAll.textContent = "Tutti i capitoli (" + CHAPTERS.length + ")";
+  sel.appendChild(optAll);
+  CHAPTERS.forEach(c=>{
+    const opt = document.createElement("option");
+    opt.value = c.id;
+    opt.textContent = "Cap. " + c.num + " — " + c.titolo_it + (mastered.includes(c.id) ? " ✓" : "");
+    sel.appendChild(opt);
+  });
+  sel.value = current;
+}
+function onSpellScopeChange(){
+  const sel = document.getElementById("spell-scope-select");
+  saveSpellScope(sel.value);
+  spellQueue = []; // forza la ricostruzione della coda sul nuovo ambito
+  loadSpellingQuestion();
+}
+function loadSpellingQuestion(){
+  renderSpellScopeSelector();
+  currentSpellItem = drawSpelling();
+  resetSpellUI();
+  updateSpellScore();
+  const noteEl = document.getElementById("spell-note");
+  if(!currentSpellItem){
+    document.getElementById("spell-hint").textContent = "Nessuna parola disponibile in questo ambito.";
+    document.getElementById("spell-input").disabled = true;
+    noteEl.style.display = "none";
+    return;
+  }
+  document.getElementById("spell-hint").textContent = currentSpellItem.hint;
+  if(currentSpellItem.note){
+    noteEl.textContent = "⚠ " + currentSpellItem.note;
+    noteEl.style.display = "block";
+  } else {
+    noteEl.style.display = "none";
+  }
+  document.getElementById("spell-input").focus();
+}
+function normalize(s){
+  return s.trim().toLowerCase()
+    .replace(/[''`´‘’]/g, "'")   // uniforma tutti i tipi di apostrofo
+    .replace(/\s+/g, " ");        // uniforma spazi multipli
+}
+function showSpellContinue(){
+  document.getElementById("spell-continue").style.display = "block";
+}
+function spellCheck(){
+  if(spellRevealed || !currentSpellItem) return;
+  const val = document.getElementById("spell-input").value;
+  const fb = document.getElementById("spell-feedback");
+  if(normalize(val) === normalize(currentSpellItem.word)){
+    fb.style.color = "var(--green)";
+    fb.textContent = "✓ Esatto: " + currentSpellItem.word;
+    document.getElementById("spell-input").disabled = true;
+    markSpellResult(currentSpellItem.word, true);
+    updateSpellScore();
+    spellRevealed = true;
+    setTimeout(loadSpellingQuestion, 1200);
+  } else {
+    fb.style.color = "var(--red)";
+    fb.textContent = "Non è corretto, prova a scegliere tra le opzioni:";
+    markSpellResult(currentSpellItem.word, false);
+    updateSpellScore();
+    spellShowChoices();
+  }
+}
+function spellHelp(){
+  if(spellRevealed || !currentSpellItem) return;
+  document.getElementById("spell-feedback").style.color = "var(--text-dim)";
+  document.getElementById("spell-feedback").textContent = "Ecco le opzioni:";
+  markSpellResult(currentSpellItem.word, false);
+  updateSpellScore();
+  spellShowChoices();
+}
+function spellShowChoices(){
+  spellRevealed = true;
+  document.getElementById("spell-input").disabled = true;
+  let opts = shuffle([currentSpellItem.word, ...currentSpellItem.wrong]);
+  const container = document.getElementById("spell-options");
+  container.innerHTML = "";
+  opts.forEach(opt=>{
+    const btn = document.createElement("button");
+    btn.className = "quiz-opt";
+    btn.textContent = opt;
+    btn.onclick = ()=>spellPick(btn, opt);
+    container.appendChild(btn);
+  });
+}
+function spellPick(btn, opt){
+  document.querySelectorAll("#spell-options .quiz-opt").forEach(b=>{
+    b.onclick = null;
+    if(b.textContent === currentSpellItem.word) b.classList.add("correct");
+    else if(b===btn) b.classList.add("wrong");
+  });
+  if(opt === currentSpellItem.word){
+    // scelta corretta al primo colpo tra le opzioni: avanti automaticamente
+    setTimeout(loadSpellingQuestion, 1300);
+  } else {
+    // scelta sbagliata: lascia il tempo di leggere la risposta corretta
+    showSpellContinue();
+  }
+}
+
+/* =========================================================
+   SUPABASE — login e sincronizzazione dei progressi
+   ========================================================= */
+const SUPABASE_URL  = 'https://edlvmkjctzhqoswpppds.supabase.co/';   // ← incolla il tuo API URL
+const SUPABASE_ANON_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVkbHZta2pjdHpocW9zd3BwcGRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNjEyMDEsImV4cCI6MjA5NjczNzIwMX0.Oq0TyYWG4LotZhH57LQtklUdVho_kQ15KlSs8KGO2AM';        // ← incolla la tua anon key
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const LAST_SYNC_KEY = "burgertest_last_sync_v1";
+let currentUserId = null;
+let syncTimer = null;
+
+function collectProgressData(){
+  return {
+    srs: loadSRS(),
+    settings: loadSettings(),
+    daily: loadDaily(),
+    results: loadResults(),
+    spellScope: loadSpellScope(),
+    spellStats: loadSpellStats()
+  };
+}
+function applyProgressData(d){
+  if(!d) return;
+  if(d.srs) localStorage.setItem(STORE_KEY, JSON.stringify(d.srs));
+  if(d.settings) localStorage.setItem(SETTINGS_KEY, JSON.stringify(d.settings));
+  if(d.daily) localStorage.setItem(DAILY_KEY, JSON.stringify(d.daily));
+  if(d.results) localStorage.setItem(RESULTS_KEY, JSON.stringify(d.results));
+  if(d.spellScope) localStorage.setItem(SPELL_SCOPE_KEY, d.spellScope);
+  if(d.spellStats) localStorage.setItem(SPELL_STATS_KEY, JSON.stringify(d.spellStats));
+}
+
+function queueCloudSync(){
+  if(!currentUserId) return; // non loggato: resta solo locale
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(pushProgressToCloud, 1500);
+}
+async function pushProgressToCloud(){
+  if(!currentUserId) return;
+  const now = new Date().toISOString();
+  const { error } = await sb.from("CH_progress").upsert({
+    user_id: currentUserId,
+    data: collectProgressData(),
+    updated_at: now
+  }, { onConflict: "user_id" });
+  if(!error) localStorage.setItem(LAST_SYNC_KEY, now);
+  else console.error("Errore di sincronizzazione:", error);
+}
+async function pullProgressFromCloud(){
+  const { data, error } = await sb.from("CH_progress").select("data, updated_at").eq("user_id", currentUserId).maybeSingle();
+  if(error){ console.error("Errore nel recupero dei progressi:", error); return; }
+  if(!data) { pushProgressToCloud(); return; } // primo accesso: carica i dati locali sul cloud
+  const localLast = localStorage.getItem(LAST_SYNC_KEY);
+  if(!localLast || new Date(data.updated_at) > new Date(localLast)){
+    applyProgressData(data.data);
+    localStorage.setItem(LAST_SYNC_KEY, data.updated_at);
+    renderHome(); // ricarica la vista con i dati sincronizzati
+  }
+}
+
+function showAuthGate(){ document.getElementById("auth-gate").style.display = "flex"; }
+function hideAuthGate(){ document.getElementById("auth-gate").style.display = "none"; }
+
+let authMode = "signin"; // "signin" oppure "signup"
+function setAuthMode(mode){
+  authMode = mode;
+  document.getElementById("auth-tab-signin").className = mode==="signin" ? "good" : "ghost";
+  document.getElementById("auth-tab-signup").className = mode==="signup" ? "good" : "ghost";
+  document.getElementById("auth-submit-btn").textContent = mode==="signin" ? "Accedi" : "Crea account";
+  document.getElementById("auth-message").textContent = "";
+}
+async function submitAuth(){
+  const email = document.getElementById("auth-email").value.trim();
+  const password = document.getElementById("auth-password").value;
+  const msg = document.getElementById("auth-message");
+  if(!email || !password){ msg.textContent = "Inserisci email e password."; return; }
+  msg.textContent = authMode==="signin" ? "Accesso in corso..." : "Creazione account in corso...";
+  if(authMode === "signin"){
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if(error) msg.textContent = "Errore: " + error.message;
+    // se ok, onAuthStateChange gestisce il resto (nasconde la schermata)
+  } else {
+    const { error } = await sb.auth.signUp({ email, password });
+    if(error){ msg.textContent = "Errore: " + error.message; return; }
+    msg.textContent = "Account creato. Se richiesto, controlla la tua email per confermare, poi accedi.";
+  }
+}
+async function sendPasswordReset(){
+  const email = document.getElementById("auth-email").value.trim();
+  const msg = document.getElementById("auth-message");
+  if(!email){ msg.textContent = "Inserisci la tua email qui sopra, poi riclicca su \"Password dimenticata?\"."; return; }
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+  msg.textContent = error ? ("Errore: " + error.message) : "Email di reset inviata, controlla la tua casella.";
+}
+async function signOut(){
+  await sb.auth.signOut();
+  currentUserId = null;
+  showAuthGate();
+}
+
+async function initAuth(){
+  setAuthMode("signin");
+  const { data: { session } } = await sb.auth.getSession();
+  if(session){
+    currentUserId = session.user.id;
+    document.getElementById("auth-user-email").textContent = session.user.email || "";
+    hideAuthGate();
+    pullProgressFromCloud();
+  } else {
+    showAuthGate();
+  }
+  sb.auth.onAuthStateChange((event, session)=>{
+    if(event === "SIGNED_IN" && session){
+      currentUserId = session.user.id;
+      document.getElementById("auth-user-email").textContent = session.user.email || "";
+      hideAuthGate();
+      pullProgressFromCloud();
+    } else if(event === "SIGNED_OUT"){
+      currentUserId = null;
+      showAuthGate();
+    }
+  });
+}
+
+/* Registrazione service worker per l'uso offline (PWA) */
+if("serviceWorker" in navigator){
+  window.addEventListener("load", ()=>{
+    navigator.serviceWorker.register("service-worker.js").catch(e=>console.error("SW error:", e));
+  });
+}
+
+/* INIT */
+renderHome();
+initAuth();
+</script>
+
+</body>
+</html>
