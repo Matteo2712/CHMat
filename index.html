@@ -33,11 +33,29 @@
     padding-bottom:90px;
   }
   header{
-    padding:20px 18px 14px; border-bottom:1px solid var(--line);
+    padding:10px 16px; border-bottom:1px solid var(--line);
     position:sticky; top:0; background:var(--bg); z-index:10;
+    display:flex; align-items:center; justify-content:space-between;
   }
-  header h1{ font-size:19px; margin:0 0 2px; letter-spacing:.3px; font-weight:700; }
-  header .sub{ color:var(--text-dim); font-size:13px; }
+  header h1{ font-size:16px; margin:0; letter-spacing:.3px; font-weight:700; }
+  .account-pill{
+    display:flex; align-items:center; gap:6px; background:var(--bg-elev);
+    border:1px solid var(--line); border-radius:999px; padding:6px 12px 6px 10px;
+    cursor:pointer; font-size:12px; color:var(--text-dim); max-width:60vw;
+  }
+  .account-pill .dot{ width:8px; height:8px; border-radius:50%; background:var(--green); flex-shrink:0; }
+  .account-pill .email-txt{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .account-menu{
+    display:none; position:absolute; top:52px; right:16px; z-index:30;
+    background:var(--bg-elev); border:1px solid var(--line); border-radius:10px;
+    box-shadow:0 8px 24px rgba(0,0,0,.4); min-width:140px; overflow:hidden;
+  }
+  .account-menu.open{ display:block; }
+  .account-menu button{
+    display:block; width:100%; text-align:left; background:none; border:none;
+    color:var(--text); font-size:13.5px; padding:12px 14px; font-family:inherit; cursor:pointer;
+  }
+  .account-menu button:active{ background:var(--bg); }
   .stripe{ height:4px; background:linear-gradient(90deg,var(--red) 0 50%, var(--text) 50% 100%); opacity:.85;}
 
   main{ padding:16px; max-width:640px; margin:0 auto; }
@@ -193,17 +211,15 @@
 </div>
 
 <header>
-  <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-    <div>
-      <h1>Bürgertest</h1>
-      <div class="sub">Vorbereitung Einbürgerungsgespräch — Basel-Stadt</div>
-    </div>
-    <div style="text-align:right; font-size:11px; color:var(--text-dim); white-space:nowrap;">
-      <div id="auth-user-email" style="margin-bottom:4px;"></div>
-      <a href="#" onclick="signOut(); return false;" style="color:var(--text-dim);">Esci</a>
-    </div>
+  <h1>CH Mat</h1>
+  <div class="account-pill" id="account-pill" onclick="toggleAccountMenu()" style="display:none;">
+    <span class="dot"></span>
+    <span class="email-txt" id="auth-user-email"></span>
   </div>
 </header>
+<div class="account-menu" id="account-menu">
+  <button onclick="signOut(); closeAccountMenu();">Esci</button>
+</div>
 <div class="stripe"></div>
 
 <main>
@@ -1858,8 +1874,8 @@ function spellPick(btn, opt){
 /* =========================================================
    SUPABASE — login e sincronizzazione dei progressi
    ========================================================= */
-const SUPABASE_URL  = 'https://edlvmkjctzhqoswpppds.supabase.co/';   // ← incolla il tuo API URL
-const SUPABASE_ANON_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVkbHZta2pjdHpocW9zd3BwcGRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNjEyMDEsImV4cCI6MjA5NjczNzIwMX0.Oq0TyYWG4LotZhH57LQtklUdVho_kQ15KlSs8KGO2AM';        // ← incolla la tua anon key
+const SUPABASE_URL = "https://TUO-PROGETTO.supabase.co"; // TODO: sostituisci con l'URL del tuo progetto Supabase
+const SUPABASE_ANON_KEY = "TUA-ANON-KEY"; // TODO: sostituisci con la anon key del tuo progetto Supabase
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const LAST_SYNC_KEY = "burgertest_last_sync_v1";
@@ -1951,8 +1967,23 @@ async function sendPasswordReset(){
 async function signOut(){
   await sb.auth.signOut();
   currentUserId = null;
+  document.getElementById("account-pill").style.display = "none";
   showAuthGate();
 }
+
+function toggleAccountMenu(){
+  document.getElementById("account-menu").classList.toggle("open");
+}
+function closeAccountMenu(){
+  document.getElementById("account-menu").classList.remove("open");
+}
+document.addEventListener("click", (e)=>{
+  const menu = document.getElementById("account-menu");
+  const pill = document.getElementById("account-pill");
+  if(menu && menu.classList.contains("open") && !menu.contains(e.target) && !pill.contains(e.target)){
+    closeAccountMenu();
+  }
+});
 
 async function initAuth(){
   setAuthMode("signin");
@@ -1960,6 +1991,7 @@ async function initAuth(){
   if(session){
     currentUserId = session.user.id;
     document.getElementById("auth-user-email").textContent = session.user.email || "";
+    document.getElementById("account-pill").style.display = "flex";
     hideAuthGate();
     pullProgressFromCloud();
   } else {
@@ -1969,10 +2001,12 @@ async function initAuth(){
     if(event === "SIGNED_IN" && session){
       currentUserId = session.user.id;
       document.getElementById("auth-user-email").textContent = session.user.email || "";
+      document.getElementById("account-pill").style.display = "flex";
       hideAuthGate();
       pullProgressFromCloud();
     } else if(event === "SIGNED_OUT"){
       currentUserId = null;
+      document.getElementById("account-pill").style.display = "none";
       showAuthGate();
     }
   });
