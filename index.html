@@ -387,7 +387,10 @@
         <div class="quiz-q" id="spell-hint" style="flex:1; margin:0;">—</div>
         <button class="del-btn" id="spell-del-btn" title="Elimina questa parola" style="display:none;">🗑️</button>
       </div>
-      <div style="margin-top:6px;"><span class="lvl-badge" id="spell-lvl-badge" style="display:none;"></span></div>
+      <div style="margin-top:6px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <span class="lvl-badge" id="spell-lvl-badge" style="display:none;"></span>
+        <span id="spell-item-stats" style="font-size:11.5px; color:var(--text-dim);"></span>
+      </div>
       <div id="spell-note" style="font-size:12.5px; color:var(--amber); margin-top:4px; display:none;"></div>
       <input type="text" id="spell-input" autocomplete="off" autocapitalize="off" spellcheck="false"
         placeholder="Scrivi qui la parola in tedesco..."
@@ -1318,7 +1321,6 @@ function renderDeletedList(){
 }
 function restoreAndRefresh(id){
   restoreItemById(id);
-  spellQueue = []; // forza la ricostruzione della coda ortografia se necessario
   renderDeletedSummary();
 }
 function updateDailyLimit(val){
@@ -1954,13 +1956,36 @@ const SPELLING_QUIZ = [
 ];
 
 /* Statistiche di ortografia: per ogni voce (per id, o per word se legacy) memorizzano
-   SOLO l'esito dell'ultima risposta digitata ("status": "correct"/"wrong"/assente) e la
-   serie di risposte corrette consecutive ("streak"). Nessuno stato è permanente: se una
-   voce viene sbagliata dopo essere stata indovinata, torna a contare come "da fare". */
+   l'esito dell'ultima risposta digitata ("status"), la serie di risposte corrette
+   consecutive ("streak"), e due contatori cumulativi: "asked" (quante volte è stata
+   proposta) e "wrong" (quante volte è stata sbagliata). Nessuno stato è permanente:
+   se una voce viene sbagliata dopo essere stata indovinata, torna a contare come "da fare". */
 const SPELL_STATS_KEY = "burgertest_spell_stats_v1";
 function loadSpellStats(){ try{ return JSON.parse(localStorage.getItem(SPELL_STATS_KEY)) || {}; } catch(e){ return {}; } }
 function saveSpellStats(s){ localStorage.setItem(SPELL_STATS_KEY, JSON.stringify(s)); queueCloudSync(); }
 function spellKey(item){ return item.id || item.word; }
+function spellStatOf(item){
+  const raw = loadSpellStats()[spellKey(item)];
+  if(!raw) return { status:null, streak:0, asked:0, wrong:0 };
+  if(typeof raw === "string") return { status:raw, streak: raw==="correct"?1:0, asked:1, wrong: raw==="wrong"?1:0 }; // retrocompatibilità
+  return { status: raw.status||null, streak: raw.streak||0, asked: raw.asked||0, wrong: raw.wrong||0 };
+}
+/* Registra che una voce è stata mostrata (incrementa SOLO il contatore "asked"),
+   da chiamare una volta ogni volta che una domanda viene presentata. */
+function spellMarkShown(item){
+  if(!item) return;
+  const s = loadSpellStats();
+  const key = spellKey(item);
+  const prev = spellStatOfRaw(s, key);
+  s[key] = { status: prev.status, streak: prev.streak, wrong: prev.wrong, asked: prev.asked + 1 };
+  saveSpellStats(s);
+}
+function spellStatOfRaw(statsObj, key){
+  const raw = statsObj[key];
+  if(!raw) return { status:null, streak:0, asked:0, wrong:0 };
+  if(typeof raw === "string") return { status:raw, streak: raw==="correct"?1:0, asked:1, wrong: raw==="wrong"?1:0 };
+  return { status: raw.status||null, streak: raw.streak||0, asked: raw.asked||0, wrong: raw.wrong||0 };
+}
 /* IMPORTANTE: conta come "corretta" SOLO se digitata esattamente, senza aiuti.
    Selezionare la risposta giusta tra le opzioni multiple (dopo un errore o "Aiuto") NON
    deve mai marcare la voce come corretta: chiamare questa funzione con correct=true solo
@@ -1968,26 +1993,17 @@ function spellKey(item){ return item.id || item.word; }
 function markSpellResult(item, correct){
   const s = loadSpellStats();
   const key = spellKey(item);
-  const prev = s[key];
-  const prevStreak = (prev && typeof prev === "object") ? (prev.streak||0) : 0;
+  const prev = spellStatOfRaw(s, key);
   if(correct){
-    s[key] = { status:"correct", streak: prevStreak + 1 };
+    s[key] = { status:"correct", streak: prev.streak + 1, asked: prev.asked, wrong: prev.wrong };
+    // "fresh" = la voce non era già corretta prima di questa risposta (era nuova o rosa/sbagliata):
+    // solo in questo caso si passa obbligatoriamente a una domanda nuova.
+    spellLastOutcome = (prev.status === "correct") ? "repeat" : "fresh";
   } else {
-    s[key] = { status:"wrong", streak: 0 };
+    s[key] = { status:"wrong", streak: 0, asked: prev.asked, wrong: prev.wrong + 1 };
+    spellLastOutcome = "wrong";
   }
   saveSpellStats(s);
-}
-function spellStatOf(item){
-  const raw = loadSpellStats()[spellKey(item)];
-  if(!raw) return { status:null, streak:0 };
-  if(typeof raw === "string") return { status:raw, streak: raw==="correct"?1:0 }; // retrocompatibilità
-  return { status: raw.status||null, streak: raw.streak||0 };
-}
-function spellWeight(item){
-  const st = spellStatOf(item);
-  if(st.status !== "correct") return 3;  // mai vista o sbagliata: alta priorità
-  if(st.streak >= 2) return 1;           // corretta più volte di fila: solida, priorità bassa
-  return 2;                               // corretta l'ultima volta ma non ancora consolidata
 }
 /* Fase base/extra per un dato set di voci "base" dell'ambito corrente:
    locked  = c'è almeno una base non attualmente corretta → solo base
@@ -2010,45 +2026,86 @@ function spellCounters(){
   return { baseDone, baseTot:baseItems.length, extraDone, extraTot:extraItems.length, phase: spellPhase(baseItems) };
 }
 
-let spellQueue = []; let spellLast = null;
+/* =========================================================
+   SELEZIONE DELLA PROSSIMA DOMANDA — regola:
+   - se l'ultima risposta è stata corretta (o è la primissima domanda), si va avanti con
+     una voce MAI vista prima, finché ce ne sono: nessuna ripetizione durante una serie
+     di risposte tutte giuste.
+   - se l'ultima risposta è stata sbagliata (o non ci sono più voci nuove), si pesca dal
+     mazzo "da rivedere", dando priorità a chi ha più errori cumulati, e a parità di
+     errori a chi è stato chiesto meno finora.
+   - le voci "consolidate" (corrette e con streak >= 2) escono dalla rotazione attiva.
+   ========================================================= */
+/* =========================================================
+   SELEZIONE DELLA PROSSIMA DOMANDA — regola:
+   - se l'ultima risposta corretta ha riguardato una voce che PRIMA era nuova o rosa
+     (sbagliata), si passa obbligatoriamente a una voce MAI vista, finché ce ne sono.
+   - se l'ultima risposta corretta ha riguardato una voce GIÀ verde (corretta anche
+     in precedenza), non c'è nessuna forzatura: la prossima domanda può benissimo
+     essere ancora una vecchia domanda, secondo la pesatura normale.
+   - se l'ultima risposta è stata sbagliata, si pesca dal mazzo "da rivedere", dando
+     priorità a chi ha più errori cumulati, e a parità di errori a chi è stato
+     chiesto meno finora.
+   - le voci "consolidate" (corrette e con streak >= 2) escono dalla rotazione attiva.
+   ========================================================= */
+let spellLast = null;
+let spellLastOutcome = null; // "fresh" | "repeat" | "wrong" | null (nessuna risposta ancora data)
 function drawSpelling(){
   const scopeTemi = getSpellScopeTemi();
   const scopeAll = SPELLING_QUIZ.filter(w => scopeTemi.includes(w.tema) && !isDeleted(spellKey(w)));
   if(scopeAll.length === 0) return null;
   const baseItems = scopeAll.filter(w=>livelloOf(w)==="base");
-  const extraItems = scopeAll.filter(w=>livelloOf(w)==="extra");
   const phase = spellPhase(baseItems);
-
   let pool = (phase === "locked") ? baseItems : scopeAll;
   if(pool.length === 0) pool = scopeAll;
 
-  if(spellQueue.length===0 || !spellQueue.every(w=>pool.includes(w))){
-    // ricostruisce la coda pesata: le voci sbagliate/non ancora solide compaiono più volte;
-    // le "extra" restano attenuate finché le "base" non sono del tutto solide
+  const newItems = [], dueItems = [], masteredItems = [];
+  pool.forEach(it=>{
+    const st = spellStatOf(it);
+    if(!st.status) newItems.push(it);
+    else if(st.status === "correct" && st.streak >= 2) masteredItems.push(it);
+    else dueItems.push(it);
+  });
+
+  function weightedPickFromDue(items){
     let weighted = [];
-    pool.forEach(w=>{
-      let wt = spellWeight(w);
-      if(livelloOf(w) === "extra" && phase === "shaky") wt = Math.max(1, Math.round(wt * 0.4));
-      for(let i=0;i<wt;i++) weighted.push(w);
+    items.forEach(it=>{
+      const st = spellStatOf(it);
+      const weight = Math.max(1, st.wrong*3 - Math.floor(st.asked/3) + 2);
+      for(let i=0;i<weight;i++) weighted.push(it);
     });
-    spellQueue = shuffle(weighted);
-    // evita ripetizioni consecutive esatte o due varianti consecutive dello stesso gruppo (stesso fatto-fonte)
-    for(let i=1;i<spellQueue.length;i++){
-      const prev = spellQueue[i-1];
-      const same = spellQueue[i]===prev || (prev.groupId && spellQueue[i].groupId===prev.groupId);
-      if(same){
-        for(let j=i+1;j<spellQueue.length;j++){
-          const cand = spellQueue[j];
-          if(cand!==prev && !(prev.groupId && cand.groupId===prev.groupId)){
-            [spellQueue[i],spellQueue[j]] = [spellQueue[j],spellQueue[i]];
-            break;
-          }
-        }
-      }
-    }
-    if(spellQueue.length>1 && spellQueue[0]===spellLast){ [spellQueue[0],spellQueue[1]] = [spellQueue[1],spellQueue[0]]; }
+    return weighted[Math.floor(Math.random()*weighted.length)];
   }
-  const item = spellQueue.shift(); spellLast = item; return item;
+
+  let chosen;
+  if((spellLastOutcome === "fresh" || spellLastOutcome === null) && newItems.length > 0){
+    // successo su una voce prima nuova/rosa (o è la primissima domanda): si va avanti col nuovo
+    let filtered = newItems.filter(it => it!==spellLast && !(spellLast && it.groupId && it.groupId===spellLast.groupId));
+    if(filtered.length === 0) filtered = newItems;
+    chosen = filtered[Math.floor(Math.random()*filtered.length)];
+  } else if(spellLastOutcome === "wrong" && dueItems.length > 0){
+    // ultima risposta sbagliata: si ripassa, dando priorità alle voci più difficili
+    let filtered = dueItems.filter(it => it!==spellLast && !(spellLast && it.groupId && it.groupId===spellLast.groupId));
+    if(filtered.length === 0) filtered = dueItems;
+    chosen = filtered.length > 1 ? weightedPickFromDue(filtered) : filtered[0];
+  } else {
+    // successo su una voce già verde (nessuna forzatura): mix naturale tra nuove e da rivedere,
+    // pesato per difficoltà; le nuove entrano con un peso base moderato
+    let pool2 = dueItems.length + newItems.length > 0 ? dueItems.concat(newItems) : masteredItems;
+    if(pool2.length === 0) pool2 = pool;
+    let filtered = pool2.filter(it => it!==spellLast && !(spellLast && it.groupId && it.groupId===spellLast.groupId));
+    if(filtered.length === 0) filtered = pool2;
+    let weighted = [];
+    filtered.forEach(it=>{
+      const st = spellStatOf(it);
+      const weight = st.status ? Math.max(1, st.wrong*3 - Math.floor(st.asked/3) + 2) : 2;
+      for(let i=0;i<weight;i++) weighted.push(it);
+    });
+    chosen = weighted.length ? weighted[Math.floor(Math.random()*weighted.length)] : filtered[0];
+  }
+
+  spellLast = chosen;
+  return chosen;
 }
 let currentSpellItem = null;
 let spellRevealed = false;
@@ -2092,7 +2149,7 @@ function renderSpellScopeSelector(){
 function onSpellScopeChange(){
   const sel = document.getElementById("spell-scope-select");
   saveSpellScope(sel.value);
-  spellQueue = []; // forza la ricostruzione della coda sul nuovo ambito
+  spellLast = null; spellLastOutcome = null; // nuovo ambito: si riparte preferendo le voci nuove
   loadSpellingQuestion();
 }
 function askResetSpellStats(){
@@ -2104,19 +2161,25 @@ function askResetSpellStats(){
     const stats = loadSpellStats();
     scope.forEach(w=> delete stats[spellKey(w)]);
     saveSpellStats(stats);
-    spellQueue = [];
+    spellLast = null; spellLastOutcome = null;
     loadSpellingQuestion();
   });
 }
 function loadSpellingQuestion(){
   renderSpellScopeSelector();
   currentSpellItem = drawSpelling();
+  let statBefore = null;
+  if(currentSpellItem){
+    statBefore = spellStatOf(currentSpellItem); // prima di incrementare "asked" per questa presentazione
+    spellMarkShown(currentSpellItem);
+  }
   resetSpellUI();
   updateSpellScore();
   const noteEl = document.getElementById("spell-note");
   const badge = document.getElementById("spell-lvl-badge");
   const delBtn = document.getElementById("spell-del-btn");
   const card = document.getElementById("spell-card");
+  const statsLine = document.getElementById("spell-item-stats");
   if(!currentSpellItem){
     document.getElementById("spell-hint").textContent = "Nessuna parola disponibile in questo ambito.";
     document.getElementById("spell-input").disabled = true;
@@ -2124,13 +2187,20 @@ function loadSpellingQuestion(){
     if(badge) badge.style.display = "none";
     if(delBtn) delBtn.style.display = "none";
     if(card) card.classList.remove("spell-known","spell-new");
+    if(statsLine) statsLine.textContent = "";
     return;
   }
   document.getElementById("spell-hint").textContent = currentSpellItem.hint;
   if(card){
-    const known = spellStatOf(currentSpellItem).status === "correct";
+    const known = statBefore.status === "correct";
     card.classList.toggle("spell-known", known);
     card.classList.toggle("spell-new", !known);
+  }
+  if(statsLine){
+    statsLine.textContent = statBefore.asked === 0
+      ? "Nuova"
+      : "Chiesta " + statBefore.asked + " volt" + (statBefore.asked===1?"a":"e") +
+        " · Sbagliata " + statBefore.wrong + " volt" + (statBefore.wrong===1?"a":"e");
   }
   if(currentSpellItem.note){
     noteEl.textContent = "⚠ " + currentSpellItem.note;
@@ -2147,7 +2217,6 @@ function loadSpellingQuestion(){
     delBtn.onclick = ()=>{
       const item = currentSpellItem;
       askDelete(spellKey(item), item.word, ()=>{
-        spellQueue = [];
         loadSpellingQuestion();
       });
     };
