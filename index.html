@@ -158,6 +158,32 @@
   .wrong-item .a{ font-size:12.5px; color:var(--green); margin-top:4px; }
   .wrong-item .ait{ font-size:12px; color:var(--text-dim); margin-top:2px; }
 
+  /* base/extra: badge, contatori, cancella */
+  .lvl-badge{
+    display:inline-block; font-size:11px; font-weight:800; letter-spacing:.3px;
+    text-transform:uppercase; padding:3px 9px; border-radius:20px; margin-top:2px;
+  }
+  .lvl-badge.base{ background:#123324; color:var(--green); }
+  .lvl-badge.extra{ background:#12233a; color:#5aa9ff; }
+  .lvl-counters{
+    display:flex; gap:8px; font-size:11.5px; font-weight:700; white-space:nowrap;
+  }
+  .lvl-counters .c-base{ color:var(--green); }
+  .lvl-counters .c-extra{ color:#5aa9ff; }
+  .del-btn{
+    background:none; border:none; color:var(--text-dim); font-size:16px;
+    cursor:pointer; padding:2px 4px; line-height:1; flex-shrink:0;
+  }
+  .del-btn:hover{ color:var(--red); }
+  .del-confirm{
+    display:flex; align-items:center; gap:8px; background:var(--red-dim);
+    border:1px solid var(--red); border-radius:10px; padding:8px 10px; margin:8px 0; font-size:13px;
+  }
+  .del-confirm button{ font-size:12px; padding:5px 10px; border-radius:6px; border:none; font-family:inherit; }
+  .del-confirm .yes{ background:var(--red); color:#fff; }
+  .del-confirm .no{ background:var(--line); color:var(--text); }
+  .lesson-group-head{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
+
   /* flashcard */
   .fc-wrap{ display:flex; flex-direction:column; align-items:center; gap:16px; }
   .fc-progress{ width:100%; height:5px; background:var(--line); border-radius:3px; overflow:hidden; }
@@ -183,6 +209,11 @@
 </style>
 </head>
 <body>
+<div id="global-del-confirm" style="display:none; position:fixed; left:14px; right:14px; bottom:78px; z-index:200; background:var(--red-dim); border:1px solid var(--red); border-radius:12px; padding:12px 14px; align-items:center; gap:10px; box-shadow:0 4px 18px rgba(0,0,0,.4);">
+  <div id="global-del-confirm-text" style="flex:1; font-size:13.5px;"></div>
+  <button onclick="cancelDelete()" style="background:var(--line); color:var(--text); border:none; border-radius:7px; padding:7px 12px; font-size:12.5px; font-family:inherit;">Annulla</button>
+  <button onclick="confirmDelete()" style="background:var(--red); color:#fff; border:none; border-radius:7px; padding:7px 12px; font-size:12.5px; font-family:inherit; font-weight:700;">Elimina</button>
+</div>
 
 <!-- SCHERMATA DI ACCESSO (Supabase, email + password) -->
 <div id="auth-gate" style="display:none; position:fixed; inset:0; z-index:100; background:var(--bg); flex-direction:column; align-items:center; justify-content:center; padding:24px; overflow-y:auto;">
@@ -244,9 +275,19 @@
       <input type="number" id="daily-limit-input" min="1" max="30" style="width:60px; background:var(--bg); border:1px solid var(--line); border-radius:8px; color:var(--text); font-size:16px; text-align:center; padding:8px 4px; font-family:inherit;" onchange="updateDailyLimit(this.value)">
     </div>
     <button class="ghost" onclick="startStudy()">Sessione mista di flashcard</button>
+
+    <h2 class="section-title">Elementi eliminati</h2>
+    <div class="card" id="deleted-summary" style="cursor:pointer;" onclick="toggleDeletedList()">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="font-weight:600; font-size:14px;" id="deleted-count-label">0 elementi eliminati</div>
+        <div style="color:var(--text-dim); font-size:13px;" id="deleted-toggle-arrow">▾</div>
+      </div>
+    </div>
+    <div class="card" id="deleted-list" style="display:none;"></div>
   </section>
 
   <!-- CAPITOLI: lista -->
+
   <section class="view" id="view-chapters">
     <h2 class="section-title">Capitoli</h2>
     <div class="card" id="chapter-list"></div>
@@ -276,9 +317,13 @@
   <section class="view" id="view-test">
     <div class="test-progress"><div id="test-progress-bar" style="width:0%"></div></div>
     <div class="card">
-      <div class="quiz-q" id="test-question">—</div>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+        <div class="quiz-q" id="test-question" style="flex:1;">—</div>
+        <button class="del-btn" id="test-del-btn" title="Elimina questa domanda">🗑️</button>
+      </div>
       <div class="txt-it" id="test-question-it"></div>
       <div id="test-options"></div>
+      <div style="margin-top:10px;"><span class="lvl-badge" id="test-lvl-badge"></span></div>
     </div>
     <button class="ghost" onclick="switchTab('chapters')">Interrompi</button>
   </section>
@@ -331,10 +376,14 @@
       </select>
     </div>
     <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
-        <div class="quiz-q" id="spell-hint" style="flex:1; margin:0;">—</div>
-        <div id="spell-score" style="font-size:12.5px; font-weight:700; color:var(--green); white-space:nowrap; flex-shrink:0; padding-top:2px;"></div>
+      <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+        <div id="spell-score" class="lvl-counters"></div>
       </div>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+        <div class="quiz-q" id="spell-hint" style="flex:1; margin:0;">—</div>
+        <button class="del-btn" id="spell-del-btn" title="Elimina questa parola" style="display:none;">🗑️</button>
+      </div>
+      <div style="margin-top:6px;"><span class="lvl-badge" id="spell-lvl-badge" style="display:none;"></span></div>
       <div id="spell-note" style="font-size:12.5px; color:var(--amber); margin-top:4px; display:none;"></div>
       <input type="text" id="spell-input" autocomplete="off" autocapitalize="off" spellcheck="false"
         placeholder="Scrivi qui la parola in tedesco..."
@@ -567,55 +616,55 @@ const FLASHCARDS = [
  risposta_it:"Nel 1999 ci fu la seconda revisione totale della Costituzione federale, e nel 2002 la Svizzera entrò nell'ONU."},
 
 /* ===================== 3. BUNDESRAT 2026 ===================== */
-{id:"br000", tema:"Bundesrat", sottotema:"Grundprinzip",
+{id:"br000", tema:"Bundesrat", sottotema:"Grundprinzip", livello:"extra",
  domanda_de:"Aus wie vielen Mitgliedern besteht der Bundesrat und nach welchem Prinzip entscheidet er?",
  domanda_it:"Da quanti membri è composto il Consiglio Federale e secondo quale principio decide?",
  risposta_de:"Der Bundesrat besteht aus 7 Mitgliedern, die nach dem Kollegialitätsprinzip gemeinsam entscheiden.",
  risposta_it:"Il Consiglio Federale è composto da 7 membri, che decidono collegialmente secondo il principio di collegialità."},
 
-{id:"br001", tema:"Bundesrat", sottotema:"Parmelin",
+{id:"br001", tema:"Bundesrat", sottotema:"Parmelin", livello:"base",
  domanda_de:"Wer ist Bundespräsident 2026 und welches Departement leitet er?",
  domanda_it:"Chi è il Presidente della Confederazione nel 2026 e quale dipartimento dirige?",
  risposta_de:"Guy Parmelin (SVP) ist Bundespräsident 2026 und Vorsteher des Departements für Wirtschaft, Bildung und Forschung (WBF).",
  risposta_it:"Guy Parmelin (UDC) è il Presidente della Confederazione nel 2026 e dirige il Dipartimento dell'economia, della formazione e della ricerca (WBF)."},
 
-{id:"br002", tema:"Bundesrat", sottotema:"Cassis",
+{id:"br002", tema:"Bundesrat", sottotema:"Cassis", livello:"base",
  domanda_de:"Wer ist Vizepräsident 2026 und welches Departement leitet er?",
  domanda_it:"Chi è il Vicepresidente nel 2026 e quale dipartimento dirige?",
  risposta_de:"Ignazio Cassis (FDP) ist Vizepräsident 2026 und Vorsteher des Departements für auswärtige Angelegenheiten (EDA).",
  risposta_it:"Ignazio Cassis (PLR) è il Vicepresidente nel 2026 e dirige il Dipartimento degli affari esteri (DFAE)."},
 
-{id:"br003", tema:"Bundesrat", sottotema:"Keller-Sutter",
+{id:"br003", tema:"Bundesrat", sottotema:"Keller-Sutter", livello:"base",
  domanda_de:"Welches Departement leitet Karin Keller-Sutter?",
  domanda_it:"Quale dipartimento dirige Karin Keller-Sutter?",
  risposta_de:"Karin Keller-Sutter (FDP) ist Vorsteherin des Finanzdepartements (EFD).",
  risposta_it:"Karin Keller-Sutter (PLR) dirige il Dipartimento delle finanze (DFF)."},
 
-{id:"br004", tema:"Bundesrat", sottotema:"Rösti",
+{id:"br004", tema:"Bundesrat", sottotema:"Rösti", livello:"base",
  domanda_de:"Welches Departement leitet Albert Rösti?",
  domanda_it:"Quale dipartimento dirige Albert Rösti?",
  risposta_de:"Albert Rösti (SVP) ist Vorsteher des Departements für Umwelt, Verkehr, Energie und Kommunikation (UVEK).",
  risposta_it:"Albert Rösti (UDC) dirige il Dipartimento dell'ambiente, dei trasporti, dell'energia e delle comunicazioni (DATEC)."},
 
-{id:"br005", tema:"Bundesrat", sottotema:"Baume-Schneider",
+{id:"br005", tema:"Bundesrat", sottotema:"Baume-Schneider", livello:"base",
  domanda_de:"Welches Departement leitet Elisabeth Baume-Schneider?",
  domanda_it:"Quale dipartimento dirige Elisabeth Baume-Schneider?",
  risposta_de:"Elisabeth Baume-Schneider (SP) ist Vorsteherin des Departements des Innern (EDI).",
  risposta_it:"Elisabeth Baume-Schneider (PS) dirige il Dipartimento dell'interno (DFI)."},
 
-{id:"br006", tema:"Bundesrat", sottotema:"Jans",
+{id:"br006", tema:"Bundesrat", sottotema:"Jans", livello:"base",
  domanda_de:"Welches Departement leitet Beat Jans?",
  domanda_it:"Quale dipartimento dirige Beat Jans?",
  risposta_de:"Beat Jans (SP) ist Vorsteher des Justiz- und Polizeidepartements (EJPD).",
  risposta_it:"Beat Jans (PS) dirige il Dipartimento di giustizia e polizia (DFGP)."},
 
-{id:"br007", tema:"Bundesrat", sottotema:"Pfister",
+{id:"br007", tema:"Bundesrat", sottotema:"Pfister", livello:"base",
  domanda_de:"Welches Departement leitet Martin Pfister?",
  domanda_it:"Quale dipartimento dirige Martin Pfister?",
  risposta_de:"Martin Pfister (Die Mitte) ist Vorsteher des Departements für Verteidigung, Bevölkerungsschutz und Sport (VBS).",
  risposta_it:"Martin Pfister (Die Mitte) dirige il Dipartimento della difesa, della protezione della popolazione e dello sport (DDPS)."},
 
-{id:"br008", tema:"Bundesrat", sottotema:"Bundeskanzler",
+{id:"br008", tema:"Bundesrat", sottotema:"Bundeskanzler", livello:"base",
  domanda_de:"Wer ist Bundeskanzler und was ist seine Funktion?",
  domanda_it:"Chi è il Cancelliere della Confederazione e qual è la sua funzione?",
  risposta_de:"Viktor Rossi (GLP), Bundeskanzler seit 1. Januar 2024, Stabschef des Bundesrates.",
@@ -1015,10 +1064,61 @@ const CHAPTERS = [
   {id:"c7", num:7, titolo_it:"Geografia di Basilea Città", titolo_de:"Geografie Basel-Stadt", temi:["Geografia BS"]},
   {id:"c8", num:8, titolo_it:"Cultura, società ed economia", titolo_de:"Kultur, Gesellschaft und Wirtschaft", temi:["Kultur"]}
 ];
+function livelloOf(item){ return item.livello || "base"; }
 function cardsForChapter(ch){
-  return FLASHCARDS.filter(c => ch.temi.includes(c.tema));
+  // ordine: prima tutte le "base", poi tutte le "extra"; sempre esclusi gli elementi cancellati
+  return FLASHCARDS
+    .filter(c => ch.temi.includes(c.tema) && !isDeleted(c.id))
+    .sort((a,b)=>{
+      const la = livelloOf(a), lb = livelloOf(b);
+      if(la !== lb) return la === "base" ? -1 : 1;
+      return 0;
+    });
 }
 function getChapter(id){ return CHAPTERS.find(c=>c.id===id); }
+
+/* =========================================================
+   ELEMENTI CANCELLATI — voci ritenute inutili, nascoste ovunque
+   ma recuperabili dalle Impostazioni
+   ========================================================= */
+const DELETED_KEY = "burgertest_deleted_v1";
+function loadDeleted(){ try{ return JSON.parse(localStorage.getItem(DELETED_KEY)) || {}; } catch(e){ return {}; } }
+function saveDeleted(d){ localStorage.setItem(DELETED_KEY, JSON.stringify(d)); queueCloudSync(); }
+function isDeleted(id){ return !!loadDeleted()[id]; }
+function deleteItemById(id, label){
+  const d = loadDeleted();
+  d[id] = { label: label || id, deletedAt: Date.now() };
+  saveDeleted(d);
+}
+function restoreItemById(id){
+  const d = loadDeleted();
+  delete d[id];
+  saveDeleted(d);
+}
+/* Conferma di cancellazione inline (usata in capitoli, test e ortografia) */
+let pendingDeleteId = null;
+let pendingDeleteLabel = null;
+let pendingDeleteCallback = null;
+function askDelete(id, label, onConfirmed){
+  pendingDeleteId = id; pendingDeleteLabel = label; pendingDeleteCallback = onConfirmed;
+  const box = document.getElementById("global-del-confirm");
+  if(!box) return;
+  document.getElementById("global-del-confirm-text").textContent =
+    "Eliminare definitivamente: \"" + label + "\"?";
+  box.style.display = "flex";
+}
+function confirmDelete(){
+  if(pendingDeleteId){
+    deleteItemById(pendingDeleteId, pendingDeleteLabel);
+    if(pendingDeleteCallback) pendingDeleteCallback();
+  }
+  cancelDelete();
+}
+function cancelDelete(){
+  pendingDeleteId = null; pendingDeleteLabel = null; pendingDeleteCallback = null;
+  const box = document.getElementById("global-del-confirm");
+  if(box) box.style.display = "none";
+}
 
 /* =========================================================
    SRS (Leitner) — usato per le Flashcard
@@ -1166,6 +1266,44 @@ function renderHome(){
   document.getElementById("daily-limit-input").value = settings.dailyLimit;
   document.getElementById("daily-progress").textContent =
     daily.introducedIds.length + " / " + settings.dailyLimit + " introdotte oggi";
+
+  renderDeletedSummary();
+}
+let deletedListOpen = false;
+function toggleDeletedList(){
+  deletedListOpen = !deletedListOpen;
+  document.getElementById("deleted-list").style.display = deletedListOpen ? "block" : "none";
+  document.getElementById("deleted-toggle-arrow").textContent = deletedListOpen ? "▴" : "▾";
+  if(deletedListOpen) renderDeletedList();
+}
+function renderDeletedSummary(){
+  const d = loadDeleted();
+  const n = Object.keys(d).length;
+  document.getElementById("deleted-count-label").textContent =
+    n===0 ? "Nessun elemento eliminato" : n + " elemento" + (n===1?"":"i") + " eliminat" + (n===1?"o":"i");
+  if(deletedListOpen) renderDeletedList();
+}
+function renderDeletedList(){
+  const wrap = document.getElementById("deleted-list");
+  const d = loadDeleted();
+  const ids = Object.keys(d);
+  if(ids.length === 0){
+    wrap.innerHTML = '<div style="color:var(--text-dim); font-size:13px;">Non hai eliminato nulla, per ora.</div>';
+    return;
+  }
+  wrap.innerHTML = "";
+  ids.sort((a,b)=> d[b].deletedAt - d[a].deletedAt).forEach(id=>{
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--line);";
+    row.innerHTML = `<div style="font-size:13px;">${d[id].label}</div>
+      <button class="ghost" style="padding:5px 10px; font-size:12px; width:auto;" onclick="restoreAndRefresh('${id}')">Ripristina</button>`;
+    wrap.appendChild(row);
+  });
+}
+function restoreAndRefresh(id){
+  restoreItemById(id);
+  spellQueue = []; // forza la ricostruzione della coda ortografia se necessario
+  renderDeletedSummary();
 }
 function updateDailyLimit(val){
   const n = Math.max(1, Math.min(30, parseInt(val,10) || 6));
@@ -1224,9 +1362,15 @@ function openChapterDetail(chId){
    ========================================================= */
 function openLesson(){
   const ch = getChapter(currentChapterId);
-  const cards = cardsForChapter(ch);
-  const bySotto = {};
-  cards.forEach(c=>{ (bySotto[c.sottotema] = bySotto[c.sottotema] || []).push(c); });
+  const cards = cardsForChapter(ch); // già ordinate: base prima, extra dopo
+  const bySotto = {}; const sottoOrder = []; const sottoLivello = {};
+  cards.forEach(c=>{
+    if(!(c.sottotema in bySotto)){ bySotto[c.sottotema] = []; sottoOrder.push(c.sottotema); }
+    bySotto[c.sottotema].push(c);
+    // un gruppo è "extra" solo se TUTTE le sue carte sono extra
+    if(!(c.sottotema in sottoLivello)) sottoLivello[c.sottotema] = livelloOf(c);
+    else if(livelloOf(c) === "base") sottoLivello[c.sottotema] = "base";
+  });
 
   let html = `<div class="card" style="margin-bottom:16px;">
     <div style="color:var(--red); font-weight:800; font-size:13px;">CAPITOLO ${ch.num}</div>
@@ -1234,11 +1378,21 @@ function openLesson(){
     <div style="color:var(--text-dim); font-size:14px;">${ch.titolo_de}</div>
   </div>`;
 
-  Object.keys(bySotto).forEach(sotto=>{
-    const paraDE = bySotto[sotto].map(c=>c.risposta_de).join(" ");
-    const paraIT = bySotto[sotto].map(c=>c.risposta_it).join(" ");
+  sottoOrder.forEach(sotto=>{
+    const groupCards = bySotto[sotto];
+    const lvl = sottoLivello[sotto];
+    const paraDE = groupCards.map(c=>c.risposta_de).join(" ");
+    const paraIT = groupCards.map(c=>c.risposta_it).join(" ");
+    const groupIds = groupCards.map(c=>c.id).join(",");
     html += `<div class="lesson-group">
-      <h3>${sotto}</h3>
+      <div class="lesson-group-head">
+        <h3 style="border-bottom:none; padding-bottom:0; margin-bottom:2px;">${sotto}</h3>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="lvl-badge ${lvl}">${lvl}</span>
+          <button class="del-btn" title="Elimina questo argomento" onclick="deleteLessonGroup('${groupIds}','${sotto.replace(/'/g,"")}')">🗑️</button>
+        </div>
+      </div>
+      <div style="border-bottom:1px solid var(--line); margin-bottom:10px;"></div>
       <p class="lesson-para-de">${paraDE}</p>
       <p class="lesson-para-it">${paraIT}</p>
     </div>`;
@@ -1253,6 +1407,13 @@ function openLesson(){
   document.getElementById("view-lesson").classList.add("active");
   window.scrollTo(0,0);
 }
+function deleteLessonGroup(idsCsv, label){
+  const ids = idsCsv.split(",");
+  askDelete(ids[0], label, ()=>{
+    ids.forEach(id=>deleteItemById(id, label));
+    openLesson(); // ri-renderizza senza il gruppo eliminato
+  });
+}
 
 /* =========================================================
    TEST DEL CAPITOLO — copre TUTTI i punti, in ordine mescolato
@@ -1264,7 +1425,10 @@ let testWrongItems = [];
 
 function startChapterTest(){
   const ch = getChapter(currentChapterId);
-  testQueue = shuffle(cardsForChapter(ch));
+  const cards = cardsForChapter(ch); // base prima, extra dopo
+  const baseCards = shuffle(cards.filter(c=>livelloOf(c)==="base"));
+  const extraCards = shuffle(cards.filter(c=>livelloOf(c)==="extra"));
+  testQueue = [...baseCards, ...extraCards];
   testIndex = 0; testScore = 0; testWrongItems = [];
   document.querySelectorAll("section.view").forEach(v=>v.classList.remove("active"));
   document.getElementById("view-test").classList.add("active");
@@ -1276,6 +1440,16 @@ function showTestQuestion(){
   document.getElementById("test-question-it").textContent = c.domanda_it;
   const pct = Math.round((testIndex/testQueue.length)*100);
   document.getElementById("test-progress-bar").style.width = pct+"%";
+  const lvl = livelloOf(c);
+  const badge = document.getElementById("test-lvl-badge");
+  badge.textContent = lvl; badge.className = "lvl-badge " + lvl;
+  document.getElementById("test-del-btn").onclick = ()=>{
+    askDelete(c.id, c.sottotema || c.domanda_it, ()=>{
+      testQueue.splice(testIndex,1);
+      if(testIndex >= testQueue.length) showTestResults();
+      else showTestQuestion();
+    });
+  };
 
   // distrattori: preferibilmente dallo stesso capitolo, altrimenti da tutto il pool
   let others = testQueue.filter(x=>x.id!==c.id);
@@ -1444,7 +1618,7 @@ function rateCard(quality){
    ========================================================= */
 const SPELLING_QUIZ = [
   {word:"Bundesversammlung", tema:"Volksrechte", wrong:["Bundesversamlung","Bundesversammlug"], hint:"Wie sagt man auf Deutsch \"Assemblea Federale\"?"},
-  {word:"Kollegialitätsprinzip", tema:"Bundesrat", wrong:["Kollegialprinzip","Kolegialitätsprinzip"], hint:"Wie sagt man auf Deutsch \"principio di collegialità\"?"},
+  {id:"sp-br-kollegial", word:"Kollegialitätsprinzip", tema:"Bundesrat", livello:"extra", wrong:["Kollegialprinzip","Kolegialitätsprinzip"], hint:"Wie sagt man auf Deutsch \"principio di collegialità\"?"},
   {word:"Volksinitiative", tema:"Volksrechte", wrong:["Volksinitiatve","Volksiniziative"], hint:"Wie sagt man auf Deutsch \"iniziativa popolare\"?"},
   {word:"Subsidiarität", tema:"Volksrechte", wrong:["Subsidarität","Subsidiarietät"], hint:"Wie sagt man auf Deutsch \"sussidiarietà\"?"},
   {word:"Bundesverfassung", tema:"Geschichte", wrong:["Bundesverfassun","Bundesverfasung"], hint:"Wie sagt man auf Deutsch \"Costituzione federale\"?"},
@@ -1453,7 +1627,7 @@ const SPELLING_QUIZ = [
   {word:"Bürgergemeinde", tema:"Bürgergemeinde", wrong:["Burgergemeinde","Bürgergemeide"], hint:"Wie sagt man auf Deutsch \"comunità borghese di Basilea\"?"},
   {word:"Nationalrat", tema:"Volksrechte", wrong:["Nationalrad","Nazionalrat"], hint:"Wie sagt man auf Deutsch \"Consiglio Nazionale\"?"},
   {word:"Ständerat", tema:"Volksrechte", wrong:["Standerat","Ständerad"], hint:"Wie sagt man auf Deutsch \"Consiglio degli Stati\"?"},
-  {word:"Departement", tema:"Bundesrat", wrong:["Departament","Departemant"], hint:"Wie sagt man auf Deutsch \"dipartimento\" (federale)?"},
+  {id:"sp-br-departement", word:"Departement", tema:"Bundesrat", livello:"base", wrong:["Departament","Departemant"], hint:"Wie sagt man auf Deutsch \"dipartimento\" (federale)?"},
   {word:"Referendum", tema:"Volksrechte", wrong:["Referendom","Referändum"], hint:"Wie sagt man auf Deutsch \"referendum\"?"},
   {word:"Milizsystem", tema:"Volksrechte", wrong:["Militzsystem","Milizsysten"], hint:"Wie sagt man auf Deutsch \"sistema di milizia\"?"},
   {word:"Wahlspruch", tema:"Grundfakten", note:"Non è il motto stesso (\"Einer für alle, alle für einen\"): è la PAROLA tedesca che significa \"motto\".", wrong:["Wahlspruc","Whalspruch"], hint:"Wie heisst auf Deutsch das Wort für \"motto nazionale\"?"},
@@ -1465,19 +1639,41 @@ const SPELLING_QUIZ = [
   {word:"Grosser Rat", tema:"Basel-Stadt", note:"Attenzione: non è la traduzione letterale di \"parlamento cantonale\". Il parlamento di Basel-Stadt ha un nome proprio specifico.", wrong:["Grosserat","Großer Rat"], hint:"Wie heisst das Kantonsparlament von Basel-Stadt?"},
   {word:"Konfessionslos", tema:"Kultur", wrong:["Konfessionlos","Confessionslos"], hint:"Wie sagt man auf Deutsch \"senza confessione religiosa\"?"},
   {word:"Verfassungsänderung", tema:"Volksrechte", wrong:["Verfassungsanderung","Verfassungsänderrung"], hint:"Wie sagt man auf Deutsch \"modifica costituzionale\"?"},
-  {word:"Bundeskanzler", tema:"Bundesrat", wrong:["Bundeskanzeler","Bundeskansler"], hint:"Wie sagt man auf Deutsch \"Cancelliere della Confederazione\"?"},
+  {id:"sp-br-bundeskanzler-wort", word:"Bundeskanzler", tema:"Bundesrat", livello:"base", wrong:["Bundeskanzeler","Bundeskansler"], hint:"Wie sagt man auf Deutsch \"Cancelliere della Confederazione\"?"},
   {word:"Halbkanton", tema:"Grundfakten", wrong:["Halbkantone","Halkanton"], hint:"Wie sagt man auf Deutsch \"semicantone\"?"},
   {word:"Sonderbundskrieg", tema:"Geschichte", wrong:["Sonderbundkrieg","Sonderbundeskrieg"], hint:"Wie heisst der Bürgerkrieg von 1847 zwischen liberalen und konservativen Kantonen?"},
 
   /* --- Bundesrat 2026 (nomi) --- */
-  {word:"Guy Parmelin", tema:"Bundesrat", wrong:["Guy Parmelen","Guy Parmellin"], hint:"Wer ist Bundespräsident 2026 und Vorsteher des WBF?"},
-  {word:"Ignazio Cassis", tema:"Bundesrat", wrong:["Ignazio Casis","Ignacio Cassis"], hint:"Wer ist Vizepräsident 2026 und Vorsteher des EDA?"},
-  {word:"Karin Keller-Sutter", tema:"Bundesrat", wrong:["Karin Keller-Suter","Karin Keler-Sutter"], hint:"Wer leitet das Finanzdepartement (EFD)?"},
-  {word:"Albert Rösti", tema:"Bundesrat", wrong:["Albert Rosti","Albert Röstie"], hint:"Wer leitet das UVEK?"},
-  {word:"Elisabeth Baume-Schneider", tema:"Bundesrat", wrong:["Elisabeth Baume-Schnaider","Elisabeth Baume-Shneider"], hint:"Wer leitet das Departement des Innern (EDI)?"},
-  {word:"Beat Jans", tema:"Bundesrat", wrong:["Beat Janz","Beat Jahns"], hint:"Wer leitet das Justiz- und Polizeidepartement (EJPD)?"},
-  {word:"Martin Pfister", tema:"Bundesrat", wrong:["Martin Pfster","Martin Phister"], hint:"Wer leitet das VBS?"},
-  {word:"Walter Thurnherr", tema:"Bundesrat", wrong:["Walter Thurnher","Walter Turnherr"], hint:"Wer war Bundeskanzler vor Viktor Rossi?"},
+  /* --- Bundesrat 2026: domande incrociate (nome / dipartimento / partito / carica), gruppo per persona --- */
+  {id:"sp-br-parmelin-nome", groupId:"br-parmelin", word:"Guy Parmelin", tema:"Bundesrat", livello:"base", wrong:["Guy Parmelen","Guy Parmellin"], hint:"Wer ist Bundespräsident 2026 und Vorsteher des WBF?"},
+  {id:"sp-br-parmelin-dept", groupId:"br-parmelin", word:"WBF", tema:"Bundesrat", livello:"base", wrong:["EDA","UVEK"], hint:"Welches Departement (Abkürzung) leitet Guy Parmelin?"},
+  {id:"sp-br-parmelin-partei", groupId:"br-parmelin", word:"SVP", tema:"Bundesrat", livello:"base", wrong:["FDP","SP"], hint:"Welcher Partei gehört Guy Parmelin an?"},
+  {id:"sp-br-parmelin-amt", groupId:"br-parmelin", word:"Bundespräsident", tema:"Bundesrat", livello:"base", wrong:["Vizepräsident","Departementsvorsteher"], hint:"Welches Amt hat Guy Parmelin 2026 inne?"},
+
+  {id:"sp-br-cassis-nome", groupId:"br-cassis", word:"Ignazio Cassis", tema:"Bundesrat", livello:"base", wrong:["Ignazio Casis","Ignacio Cassis"], hint:"Wer ist Vizepräsident 2026 und Vorsteher des EDA?"},
+  {id:"sp-br-cassis-dept", groupId:"br-cassis", word:"EDA", tema:"Bundesrat", livello:"base", wrong:["EFD","EJPD"], hint:"Welches Departement (Abkürzung) leitet Ignazio Cassis?"},
+  {id:"sp-br-cassis-partei", groupId:"br-cassis", word:"FDP", tema:"Bundesrat", livello:"base", wrong:["SVP","SP"], hint:"Welcher Partei gehört Ignazio Cassis an?"},
+  {id:"sp-br-cassis-amt", groupId:"br-cassis", word:"Vizepräsident", tema:"Bundesrat", livello:"base", wrong:["Bundespräsident","Departementsvorsteher"], hint:"Welches Amt hat Ignazio Cassis 2026 inne?"},
+
+  {id:"sp-br-kellersutter-nome", groupId:"br-kellersutter", word:"Karin Keller-Sutter", tema:"Bundesrat", livello:"base", wrong:["Karin Keller-Suter","Karin Keler-Sutter"], hint:"Wer leitet das Finanzdepartement (EFD)?"},
+  {id:"sp-br-kellersutter-dept", groupId:"br-kellersutter", word:"EFD", tema:"Bundesrat", livello:"base", wrong:["EDI","VBS"], hint:"Welches Departement (Abkürzung) leitet Karin Keller-Sutter?"},
+  {id:"sp-br-kellersutter-partei", groupId:"br-kellersutter", word:"FDP", tema:"Bundesrat", livello:"base", wrong:["SVP","Die Mitte"], hint:"Welcher Partei gehört Karin Keller-Sutter an?"},
+
+  {id:"sp-br-roesti-nome", groupId:"br-roesti", word:"Albert Rösti", tema:"Bundesrat", livello:"base", wrong:["Albert Rosti","Albert Röstie"], hint:"Wer leitet das UVEK?"},
+  {id:"sp-br-roesti-dept", groupId:"br-roesti", word:"UVEK", tema:"Bundesrat", livello:"base", wrong:["WBF","EJPD"], hint:"Welches Departement (Abkürzung) leitet Albert Rösti?"},
+  {id:"sp-br-roesti-partei", groupId:"br-roesti", word:"SVP", tema:"Bundesrat", livello:"base", wrong:["FDP","SP"], hint:"Welcher Partei gehört Albert Rösti an?"},
+
+  {id:"sp-br-baumeschneider-nome", groupId:"br-baumeschneider", word:"Elisabeth Baume-Schneider", tema:"Bundesrat", livello:"base", wrong:["Elisabeth Baume-Schnaider","Elisabeth Baume-Shneider"], hint:"Wer leitet das Departement des Innern (EDI)?"},
+  {id:"sp-br-baumeschneider-dept", groupId:"br-baumeschneider", word:"EDI", tema:"Bundesrat", livello:"base", wrong:["EFD","EDA"], hint:"Welches Departement (Abkürzung) leitet Elisabeth Baume-Schneider?"},
+  {id:"sp-br-baumeschneider-partei", groupId:"br-baumeschneider", word:"SP", tema:"Bundesrat", livello:"base", wrong:["SVP","FDP"], hint:"Welcher Partei gehört Elisabeth Baume-Schneider an?"},
+
+  {id:"sp-br-jans-nome", groupId:"br-jans", word:"Beat Jans", tema:"Bundesrat", livello:"base", wrong:["Beat Janz","Beat Jahns"], hint:"Wer leitet das Justiz- und Polizeidepartement (EJPD)?"},
+  {id:"sp-br-jans-dept", groupId:"br-jans", word:"EJPD", tema:"Bundesrat", livello:"base", wrong:["UVEK","VBS"], hint:"Welches Departement (Abkürzung) leitet Beat Jans?"},
+  {id:"sp-br-jans-partei", groupId:"br-jans", word:"SP", tema:"Bundesrat", livello:"base", wrong:["SVP","Die Mitte"], hint:"Welcher Partei gehört Beat Jans an?"},
+
+  {id:"sp-br-pfister-nome", groupId:"br-pfister", word:"Martin Pfister", tema:"Bundesrat", livello:"base", wrong:["Martin Pfster","Martin Phister"], hint:"Wer leitet das VBS?"},
+  {id:"sp-br-pfister-dept", groupId:"br-pfister", word:"VBS", tema:"Bundesrat", livello:"base", wrong:["EFD","EDI"], hint:"Welches Departement (Abkürzung) leitet Martin Pfister?"},
+  {id:"sp-br-pfister-partei", groupId:"br-pfister", word:"Die Mitte", tema:"Bundesrat", livello:"base", wrong:["SP","FDP"], hint:"Welcher Partei gehört Martin Pfister an?"},
 
   /* --- Regierungsrat Basel-Stadt (nomi) --- */
   {word:"Conradin Cramer", tema:"Regierung BS", wrong:["Conradin Kramer","Conradin Cramar"], hint:"Welcher Regierungsrat (LDP) ist zugleich Regierungspräsident und leitet das Präsidialdepartement?"},
@@ -1524,23 +1720,22 @@ const SPELLING_QUIZ = [
   {word:"Confoederatio Helvetica", tema:"Grundfakten", wrong:["Confoederatio Helvetika","Confederatio Helvetica"], hint:"Wie lautet der lateinische Name, aus dem \"CH\" stammt?"},
 
   /* --- Partiti politici svizzeri (nomi completi) --- */
-  {word:"Schweizerische Volkspartei", tema:"Bundesrat", wrong:["Schweizerische Volksparthei","Schweizerische Volkspartey"], hint:"Wie heisst die Partei SVP ausgeschrieben?"},
-  {word:"FDP.Die Liberalen", tema:"Bundesrat", wrong:["FDP. Die Liberale","FDP.Die Liberallen"], hint:"Wie heisst die Partei FDP ausgeschrieben?"},
-  {word:"Sozialdemokratische Partei", tema:"Bundesrat", wrong:["Sozialdemokratsche Partei","Socialdemokratische Partei"], hint:"Wie heisst die Partei SP ausgeschrieben?"},
-  {word:"Die Mitte", tema:"Bundesrat", wrong:["Die Mite","Die Midte"], hint:"Welcher Partei gehören Martin Pfister und Lukas Engelberger an?"},
-  {word:"Grünliberale Partei", tema:"Bundesrat", wrong:["Grünliberalle Partei","Grünliberale Parthei"], hint:"Wie heisst die Partei GLP ausgeschrieben?"},
+  {id:"sp-br-svp-lang", word:"Schweizerische Volkspartei", tema:"Bundesrat", livello:"extra", wrong:["Schweizerische Volksparthei","Schweizerische Volkspartey"], hint:"Wie heisst die Partei SVP ausgeschrieben?"},
+  {id:"sp-br-fdp-lang", word:"FDP.Die Liberalen", tema:"Bundesrat", livello:"extra", wrong:["FDP. Die Liberale","FDP.Die Liberallen"], hint:"Wie heisst die Partei FDP ausgeschrieben?"},
+  {id:"sp-br-sp-lang", word:"Sozialdemokratische Partei", tema:"Bundesrat", livello:"extra", wrong:["Sozialdemokratsche Partei","Socialdemokratische Partei"], hint:"Wie heisst die Partei SP ausgeschrieben?"},
+  {id:"sp-br-glp-lang", word:"Grünliberale Partei", tema:"Bundesrat", livello:"extra", wrong:["Grünliberalle Partei","Grünliberale Parthei"], hint:"Wie heisst die Partei GLP ausgeschrieben?"},
   {word:"Liberal-Demokratische Partei", tema:"Basel-Stadt", wrong:["Liberal-Demokratsche Partei","Liberale-Demokratische Partei"], hint:"Wie heisst die Partei LDP in Basel ausgeschrieben?"},
 
   /* --- Cariche politiche --- */
-  {word:"Bundespräsident", tema:"Bundesrat", wrong:["Bundespräsidend","Bundespräsidant"], hint:"Wie sagt man auf Deutsch \"Presidente della Confederazione\"?"},
-  {word:"Vizepräsident", tema:"Bundesrat", wrong:["Vizepräsidend","Vicepräsident"], hint:"Wie sagt man auf Deutsch \"Vicepresidente\" (des Bundesrates)?"},
-  {word:"Departementsvorsteher", tema:"Bundesrat", wrong:["Departementsvorsteer","Departementvorsteher"], hint:"Wie sagt man auf Deutsch \"capo di un dipartimento federale\"?"},
+  {id:"sp-br-bundespraesident-wort", word:"Bundespräsident", tema:"Bundesrat", livello:"base", wrong:["Bundespräsidend","Bundespräsidant"], hint:"Wie sagt man auf Deutsch \"Presidente della Confederazione\"?"},
+  {id:"sp-br-vizepraesident-wort", word:"Vizepräsident", tema:"Bundesrat", livello:"base", wrong:["Vizepräsidend","Vicepräsident"], hint:"Wie sagt man auf Deutsch \"Vicepresidente\" (des Bundesrates)?"},
+  {id:"sp-br-departementsvorsteher", word:"Departementsvorsteher", tema:"Bundesrat", livello:"extra", wrong:["Departementsvorsteer","Departementvorsteher"], hint:"Wie sagt man auf Deutsch \"capo di un dipartimento federale\"?"},
   {word:"Regierungspräsident", tema:"Regierung BS", wrong:["Regierungspräsidend","Regierungspräsidant"], note:"Non tradurre parola per parola: è il titolo ufficiale del presidente del governo cantonale.", hint:"Wie heisst der Präsident der Basler Kantonsregierung?"},
   {word:"Gerichtspräsidium", tema:"Regierung BS", wrong:["Gerichtspräsidum","Gerichtpräsidium"], hint:"Wie sagt man auf Deutsch \"presidenza di un tribunale cantonale\"?"},
   {word:"Bürgerrat", tema:"Bürgergemeinde", wrong:["Burgerrat","Bürgerrad"], note:"Non è il \"Bürgergemeinderat\" (il parlamento): è l'esecutivo della Bürgergemeinde, 7 membri.", hint:"Wie heisst die Exekutive der Bürgergemeinde (7 Mitglieder)?"},
 
   /* --- Membri del Bundesrat / Regierungsrat aggiuntivi --- */
-  {word:"Viktor Rossi", tema:"Bundesrat", wrong:["Victor Rossi","Viktor Rosi"], hint:"Wer ist Bundeskanzler seit 2024?"},
+  {id:"sp-br-viktorrossi", word:"Viktor Rossi", tema:"Bundesrat", livello:"base", wrong:["Victor Rossi","Viktor Rosi"], hint:"Wer ist Bundeskanzler seit 2024?"},
   {word:"Roger Federer", tema:"Kultur", wrong:["Roger Federrer","Roger Fédérer"], hint:"Welcher berühmte Tennisspieler ist mit Basel verbunden?"},
 
   /* --- Fiumi --- */
@@ -1638,8 +1833,8 @@ const SPELLING_QUIZ = [
   {word:"Münsterhügel", tema:"Geschichte", wrong:["Münsterhügl","Munsterhügel"], hint:"Auf welchem Hügel hatten die ersten Siedler (Kelten) einen Zufluchtsort?"},
   {word:"Letzimauer", tema:"Geschichte", wrong:["Letzimaur","Letzimauwer"], hint:"Wie heisst ein erhaltener Rest der alten Basler Stadtbefestigung?"},
   {word:"Spalentor", tema:"Geschichte", wrong:["Spallentor","Spalentohr"], hint:"Wie heisst eines der bis heute erhaltenen historischen Stadttore von Basel?"},
-  {word:"7 Mitgliedern", tema:"Bundesrat", wrong:["8 Mitgliedern","7 Mitgliedren"], hint:"Aus wie vielen Mitgliedern besteht der Bundesrat?"},
-  {word:"Bundeskanzlei", tema:"Bundesrat", wrong:["Bundeskanzlei ","Bundeskanzlai"], hint:"Welches Organ wird vom Bundeskanzler als Stabschef des Bundesrates geleitet?"},
+  {id:"sp-br-7mitgliedern", word:"7 Mitgliedern", tema:"Bundesrat", livello:"base", wrong:["8 Mitgliedern","7 Mitgliedren"], hint:"Aus wie vielen Mitgliedern besteht der Bundesrat?"},
+  {id:"sp-br-bundeskanzlei", word:"Bundeskanzlei", tema:"Bundesrat", livello:"extra", wrong:["Bundeskanzlei ","Bundeskanzlai"], hint:"Welches Organ wird vom Bundeskanzler als Stabschef des Bundesrates geleitet?"},
   {word:"Föderalismus", tema:"Volksrechte", wrong:["Foederalismus","Föderalismuss"], hint:"Wie sagt man auf Deutsch \"federalismo\" (Prinzip der Machtaufteilung)?"},
   {word:"18 Jahren", tema:"Volksrechte", wrong:["81 Jahren","18 Jahre"], hint:"Ab welchem Alter hat man das Stimm- und Wahlrecht?"},
   {word:"Gewaltenteilung", tema:"Volksrechte", wrong:["Gewaltenteillung","Gewalteteilung"], hint:"Wie sagt man auf Deutsch \"separazione dei poteri\"?"},
@@ -1704,31 +1899,97 @@ const SPELLING_QUIZ = [
   {word:"Locarno", tema:"Grundfakten", wrong:["Locarno ","Locarnno"], hint:"Bei welcher Stadt liegt der Lago Maggiore?"}
 ];
 
-/* Statistiche di ortografia: memorizzano se l'ultima risposta per ogni parola è stata giusta o sbagliata */
+/* Statistiche di ortografia: per ogni voce (per id, o per word se legacy) memorizzano
+   l'esito dell'ultima risposta, se è mai stata azzeccata almeno una volta ("everCorrect")
+   e la serie di risposte corrette consecutive ("streak", usata per giudicarla "solida") */
 const SPELL_STATS_KEY = "burgertest_spell_stats_v1";
 function loadSpellStats(){ try{ return JSON.parse(localStorage.getItem(SPELL_STATS_KEY)) || {}; } catch(e){ return {}; } }
 function saveSpellStats(s){ localStorage.setItem(SPELL_STATS_KEY, JSON.stringify(s)); queueCloudSync(); }
-function markSpellResult(word, correct){
+function spellKey(item){ return item.id || item.word; }
+function markSpellResult(item, correct){
   const s = loadSpellStats();
-  s[word] = correct ? "correct" : "wrong";
+  const key = spellKey(item);
+  const prev = s[key];
+  // retrocompatibilità: le vecchie voci salvavano solo la stringa "correct"/"wrong"
+  const prevEverCorrect = prev && (typeof prev === "object" ? prev.everCorrect : prev === "correct");
+  const prevStreak = (prev && typeof prev === "object") ? (prev.streak||0) : 0;
+  if(correct){
+    s[key] = { status:"correct", everCorrect:true, streak: prevStreak + 1 };
+  } else {
+    s[key] = { status:"wrong", everCorrect: !!prevEverCorrect, streak: 0 };
+  }
   saveSpellStats(s);
 }
-function spellWeight(word){
-  const status = loadSpellStats()[word];
-  if(status === "correct") return 1;   // già indovinate: ripetute meno spesso
-  return 3;                             // sbagliate o mai viste: ripetute più spesso
+function spellStatOf(item){
+  const raw = loadSpellStats()[spellKey(item)];
+  if(!raw) return { status:null, everCorrect:false, streak:0 };
+  if(typeof raw === "string") return { status:raw, everCorrect: raw==="correct", streak: raw==="correct"?1:0 };
+  return raw;
+}
+function spellWeight(item){
+  const st = spellStatOf(item);
+  if(!st.status) return 3;         // mai vista: alta priorità
+  if(st.status === "wrong") return 3; // sbagliata: alta priorità
+  if(st.streak >= 2) return 1;     // corretta più volte di fila: solida, priorità bassa
+  return 2;                         // corretta ma non ancora consolidata
+}
+/* Fase base/extra per un dato set di voci "base" dell'ambito corrente:
+   locked  = ci sono ancora basi mai indovinate → solo base
+   shaky   = tutte le basi sono state indovinate almeno una volta, ma non ancora solide
+   solid   = tutte le basi sono solide (>=2 risposte corrette di fila) */
+function spellPhase(baseItems){
+  if(baseItems.length === 0) return "solid"; // nessuna base definita: nessun blocco (retrocompatibilità)
+  const allIntroduced = baseItems.every(i => spellStatOf(i).everCorrect);
+  if(!allIntroduced) return "locked";
+  const allSolid = baseItems.every(i => spellStatOf(i).streak >= 2);
+  return allSolid ? "solid" : "shaky";
+}
+function spellCounters(){
+  const scopeTemi = getSpellScopeTemi();
+  const scope = SPELLING_QUIZ.filter(w => scopeTemi.includes(w.tema) && !isDeleted(spellKey(w)));
+  const baseItems = scope.filter(w=>livelloOf(w)==="base");
+  const extraItems = scope.filter(w=>livelloOf(w)==="extra");
+  const baseDone = baseItems.filter(w=>spellStatOf(w).everCorrect).length;
+  const extraDone = extraItems.filter(w=>spellStatOf(w).everCorrect).length;
+  return { baseDone, baseTot:baseItems.length, extraDone, extraTot:extraItems.length, phase: spellPhase(baseItems) };
 }
 
 let spellQueue = []; let spellLast = null;
 function drawSpelling(){
   const scopeTemi = getSpellScopeTemi();
-  const scope = SPELLING_QUIZ.filter(w => scopeTemi.includes(w.tema));
-  if(scope.length === 0) return null;
-  if(spellQueue.length===0 || !spellQueue.every(w=>scope.includes(w))){
-    // ricostruisce la coda pesata: le parole sbagliate/non ancora indovinate compaiono più volte
+  const scopeAll = SPELLING_QUIZ.filter(w => scopeTemi.includes(w.tema) && !isDeleted(spellKey(w)));
+  if(scopeAll.length === 0) return null;
+  const baseItems = scopeAll.filter(w=>livelloOf(w)==="base");
+  const extraItems = scopeAll.filter(w=>livelloOf(w)==="extra");
+  const phase = spellPhase(baseItems);
+
+  let pool = (phase === "locked") ? baseItems : scopeAll;
+  if(pool.length === 0) pool = scopeAll;
+
+  if(spellQueue.length===0 || !spellQueue.every(w=>pool.includes(w))){
+    // ricostruisce la coda pesata: le voci sbagliate/non ancora solide compaiono più volte;
+    // le "extra" restano attenuate finché le "base" non sono del tutto solide
     let weighted = [];
-    scope.forEach(w=>{ for(let i=0;i<spellWeight(w.word);i++) weighted.push(w); });
+    pool.forEach(w=>{
+      let wt = spellWeight(w);
+      if(livelloOf(w) === "extra" && phase === "shaky") wt = Math.max(1, Math.round(wt * 0.4));
+      for(let i=0;i<wt;i++) weighted.push(w);
+    });
     spellQueue = shuffle(weighted);
+    // evita ripetizioni consecutive esatte o due varianti consecutive dello stesso gruppo (stesso fatto-fonte)
+    for(let i=1;i<spellQueue.length;i++){
+      const prev = spellQueue[i-1];
+      const same = spellQueue[i]===prev || (prev.groupId && spellQueue[i].groupId===prev.groupId);
+      if(same){
+        for(let j=i+1;j<spellQueue.length;j++){
+          const cand = spellQueue[j];
+          if(cand!==prev && !(prev.groupId && cand.groupId===prev.groupId)){
+            [spellQueue[i],spellQueue[j]] = [spellQueue[j],spellQueue[i]];
+            break;
+          }
+        }
+      }
+    }
     if(spellQueue.length>1 && spellQueue[0]===spellLast){ [spellQueue[0],spellQueue[1]] = [spellQueue[1],spellQueue[0]]; }
   }
   const item = spellQueue.shift(); spellLast = item; return item;
@@ -1747,12 +2008,10 @@ function resetSpellUI(){
 function updateSpellScore(){
   const scoreEl = document.getElementById("spell-score");
   if(!scoreEl) return;
-  const scopeTemi = getSpellScopeTemi();
-  const scope = SPELLING_QUIZ.filter(w => scopeTemi.includes(w.tema));
-  if(scope.length === 0){ scoreEl.textContent = ""; return; }
-  const stats = loadSpellStats();
-  const correct = scope.filter(w => stats[w.word] === "correct").length;
-  scoreEl.textContent = correct + " / " + scope.length + " indovinate";
+  const c = spellCounters();
+  scoreEl.innerHTML =
+    '<span class="c-base">Base '+c.baseDone+'/'+c.baseTot+'</span>' +
+    '<span class="c-extra">Extra '+c.extraDone+'/'+c.extraTot+(c.phase==="locked" ? " 🔒" : "")+'</span>';
 }
 function renderSpellScopeSelector(){
   const wrap = document.getElementById("spell-scope-wrap");
@@ -1786,10 +2045,14 @@ function loadSpellingQuestion(){
   resetSpellUI();
   updateSpellScore();
   const noteEl = document.getElementById("spell-note");
+  const badge = document.getElementById("spell-lvl-badge");
+  const delBtn = document.getElementById("spell-del-btn");
   if(!currentSpellItem){
     document.getElementById("spell-hint").textContent = "Nessuna parola disponibile in questo ambito.";
     document.getElementById("spell-input").disabled = true;
     noteEl.style.display = "none";
+    if(badge) badge.style.display = "none";
+    if(delBtn) delBtn.style.display = "none";
     return;
   }
   document.getElementById("spell-hint").textContent = currentSpellItem.hint;
@@ -1798,6 +2061,20 @@ function loadSpellingQuestion(){
     noteEl.style.display = "block";
   } else {
     noteEl.style.display = "none";
+  }
+  if(badge){
+    const lvl = livelloOf(currentSpellItem);
+    badge.textContent = lvl; badge.className = "lvl-badge " + lvl; badge.style.display = "inline-block";
+  }
+  if(delBtn){
+    delBtn.style.display = "inline-block";
+    delBtn.onclick = ()=>{
+      const item = currentSpellItem;
+      askDelete(spellKey(item), item.word, ()=>{
+        spellQueue = [];
+        loadSpellingQuestion();
+      });
+    };
   }
   document.getElementById("spell-input").focus();
 }
@@ -1817,14 +2094,14 @@ function spellCheck(){
     fb.style.color = "var(--green)";
     fb.textContent = "✓ Esatto: " + currentSpellItem.word;
     document.getElementById("spell-input").disabled = true;
-    markSpellResult(currentSpellItem.word, true);
+    markSpellResult(currentSpellItem, true);
     updateSpellScore();
     spellRevealed = true;
     setTimeout(loadSpellingQuestion, 1200);
   } else {
     fb.style.color = "var(--red)";
     fb.textContent = "Non è corretto, prova a scegliere tra le opzioni:";
-    markSpellResult(currentSpellItem.word, false);
+    markSpellResult(currentSpellItem, false);
     updateSpellScore();
     spellShowChoices();
   }
@@ -1833,7 +2110,7 @@ function spellHelp(){
   if(spellRevealed || !currentSpellItem) return;
   document.getElementById("spell-feedback").style.color = "var(--text-dim)";
   document.getElementById("spell-feedback").textContent = "Ecco le opzioni:";
-  markSpellResult(currentSpellItem.word, false);
+  markSpellResult(currentSpellItem, false);
   updateSpellScore();
   spellShowChoices();
 }
@@ -1884,7 +2161,8 @@ function collectProgressData(){
     daily: loadDaily(),
     results: loadResults(),
     spellScope: loadSpellScope(),
-    spellStats: loadSpellStats()
+    spellStats: loadSpellStats(),
+    deleted: loadDeleted()
   };
 }
 function applyProgressData(d){
@@ -1895,6 +2173,7 @@ function applyProgressData(d){
   if(d.results) localStorage.setItem(RESULTS_KEY, JSON.stringify(d.results));
   if(d.spellScope) localStorage.setItem(SPELL_SCOPE_KEY, d.spellScope);
   if(d.spellStats) localStorage.setItem(SPELL_STATS_KEY, JSON.stringify(d.spellStats));
+  if(d.deleted) localStorage.setItem(DELETED_KEY, JSON.stringify(d.deleted));
 }
 
 function queueCloudSync(){
