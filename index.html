@@ -1954,47 +1954,49 @@ const SPELLING_QUIZ = [
 ];
 
 /* Statistiche di ortografia: per ogni voce (per id, o per word se legacy) memorizzano
-   l'esito dell'ultima risposta, se è mai stata azzeccata almeno una volta ("everCorrect")
-   e la serie di risposte corrette consecutive ("streak", usata per giudicarla "solida") */
+   SOLO l'esito dell'ultima risposta digitata ("status": "correct"/"wrong"/assente) e la
+   serie di risposte corrette consecutive ("streak"). Nessuno stato è permanente: se una
+   voce viene sbagliata dopo essere stata indovinata, torna a contare come "da fare". */
 const SPELL_STATS_KEY = "burgertest_spell_stats_v1";
 function loadSpellStats(){ try{ return JSON.parse(localStorage.getItem(SPELL_STATS_KEY)) || {}; } catch(e){ return {}; } }
 function saveSpellStats(s){ localStorage.setItem(SPELL_STATS_KEY, JSON.stringify(s)); queueCloudSync(); }
 function spellKey(item){ return item.id || item.word; }
+/* IMPORTANTE: conta come "corretta" SOLO se digitata esattamente, senza aiuti.
+   Selezionare la risposta giusta tra le opzioni multiple (dopo un errore o "Aiuto") NON
+   deve mai marcare la voce come corretta: chiamare questa funzione con correct=true solo
+   dal controllo del testo digitato in spellCheck(). */
 function markSpellResult(item, correct){
   const s = loadSpellStats();
   const key = spellKey(item);
   const prev = s[key];
-  // retrocompatibilità: le vecchie voci salvavano solo la stringa "correct"/"wrong"
-  const prevEverCorrect = prev && (typeof prev === "object" ? prev.everCorrect : prev === "correct");
   const prevStreak = (prev && typeof prev === "object") ? (prev.streak||0) : 0;
   if(correct){
-    s[key] = { status:"correct", everCorrect:true, streak: prevStreak + 1 };
+    s[key] = { status:"correct", streak: prevStreak + 1 };
   } else {
-    s[key] = { status:"wrong", everCorrect: !!prevEverCorrect, streak: 0 };
+    s[key] = { status:"wrong", streak: 0 };
   }
   saveSpellStats(s);
 }
 function spellStatOf(item){
   const raw = loadSpellStats()[spellKey(item)];
-  if(!raw) return { status:null, everCorrect:false, streak:0 };
-  if(typeof raw === "string") return { status:raw, everCorrect: raw==="correct", streak: raw==="correct"?1:0 };
-  return raw;
+  if(!raw) return { status:null, streak:0 };
+  if(typeof raw === "string") return { status:raw, streak: raw==="correct"?1:0 }; // retrocompatibilità
+  return { status: raw.status||null, streak: raw.streak||0 };
 }
 function spellWeight(item){
   const st = spellStatOf(item);
-  if(!st.status) return 3;         // mai vista: alta priorità
-  if(st.status === "wrong") return 3; // sbagliata: alta priorità
-  if(st.streak >= 2) return 1;     // corretta più volte di fila: solida, priorità bassa
-  return 2;                         // corretta ma non ancora consolidata
+  if(st.status !== "correct") return 3;  // mai vista o sbagliata: alta priorità
+  if(st.streak >= 2) return 1;           // corretta più volte di fila: solida, priorità bassa
+  return 2;                               // corretta l'ultima volta ma non ancora consolidata
 }
 /* Fase base/extra per un dato set di voci "base" dell'ambito corrente:
-   locked  = ci sono ancora basi mai indovinate → solo base
-   shaky   = tutte le basi sono state indovinate almeno una volta, ma non ancora solide
+   locked  = c'è almeno una base non attualmente corretta → solo base
+   shaky   = tutte le basi sono attualmente corrette, ma non ancora solide
    solid   = tutte le basi sono solide (>=2 risposte corrette di fila) */
 function spellPhase(baseItems){
   if(baseItems.length === 0) return "solid"; // nessuna base definita: nessun blocco (retrocompatibilità)
-  const allIntroduced = baseItems.every(i => spellStatOf(i).everCorrect);
-  if(!allIntroduced) return "locked";
+  const allCorrectNow = baseItems.every(i => spellStatOf(i).status === "correct");
+  if(!allCorrectNow) return "locked";
   const allSolid = baseItems.every(i => spellStatOf(i).streak >= 2);
   return allSolid ? "solid" : "shaky";
 }
@@ -2003,8 +2005,8 @@ function spellCounters(){
   const scope = SPELLING_QUIZ.filter(w => scopeTemi.includes(w.tema) && !isDeleted(spellKey(w)));
   const baseItems = scope.filter(w=>livelloOf(w)==="base");
   const extraItems = scope.filter(w=>livelloOf(w)==="extra");
-  const baseDone = baseItems.filter(w=>spellStatOf(w).everCorrect).length;
-  const extraDone = extraItems.filter(w=>spellStatOf(w).everCorrect).length;
+  const baseDone = baseItems.filter(w=>spellStatOf(w).status==="correct").length;
+  const extraDone = extraItems.filter(w=>spellStatOf(w).status==="correct").length;
   return { baseDone, baseTot:baseItems.length, extraDone, extraTot:extraItems.length, phase: spellPhase(baseItems) };
 }
 
@@ -2126,7 +2128,7 @@ function loadSpellingQuestion(){
   }
   document.getElementById("spell-hint").textContent = currentSpellItem.hint;
   if(card){
-    const known = spellStatOf(currentSpellItem).everCorrect;
+    const known = spellStatOf(currentSpellItem).status === "correct";
     card.classList.toggle("spell-known", known);
     card.classList.toggle("spell-new", !known);
   }
@@ -2209,10 +2211,8 @@ function spellPick(btn, opt){
     else if(b===btn) b.classList.add("wrong");
   });
   if(opt === currentSpellItem.word){
-    // scelta corretta tra le opzioni: conta come risposta indovinata (altrimenti la voce
-    // resterebbe bloccata per sempre nello stato "mai indovinata" per chi usa spesso l'Aiuto)
-    markSpellResult(currentSpellItem, true);
-    updateSpellScore();
+    // scelta corretta tra le opzioni: NON conta come risposta indovinata.
+    // Solo digitare la parola esatta in spellCheck() marca una voce come corretta.
     setTimeout(loadSpellingQuestion, 1300);
   } else {
     // scelta sbagliata: lascia il tempo di leggere la risposta corretta
