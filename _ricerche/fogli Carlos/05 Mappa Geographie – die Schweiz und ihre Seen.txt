@@ -1,0 +1,15 @@
+Stati confinanti indicati:
+France, Deutschland, Österreich, Liechtenstein, Italia
+
+Cantoni svizzeri (abbreviazioni):
+GE, VD, FR, NE, JU, SO, BS, BL, AG, ZH, SH, TG, SG, AR, AI, GL, SZ, ZG, LU, NW, OW, UR, VS, TI, GR, BE
+
+Fiumi e Laghi principali:
+Rhein, Aare, Reuss, Limmat, Thur, Rhone, Ticino, Inn, Doubs, Birs, Saane, Simme, Kander, Moesa, Maira, Poschiavino
+Lac Léman, Lac de Neuchâtel, Lac de Biel/Bienne, Lac de Morat, Hallwiler-see, Sempachersee, Baldegger-see, Zuger See, Zürich-See, Walen-See, Boden-See, Vierwaldstättersee, Sarnersee, Lungerer See, Lauerzersee, Aegeri-see, Lago Maggiore, Lago di Lugano
+
+Località e città principali:
+Basel, Liestal, Delémont, Solothurn, Olten, Aarau, Zürich, Frauenfeld, Schaffhausen, St. Gallen, Herisau, Appenzell, Glarus, Altdorf, Schwyz, Zug, Luzern, Stans, Sarnen, Bern, Fribourg, Neuchâtel, Lausanne, Genève, Sion, Bellinzona, Chur, Laufen
+
+Annotazioni a mano:
+- Una freccia rossa parte dall'area del Canton Uri/Svitto e punta verso il Vierwaldstättersee con la dicitura in rosso: Rütliwiese

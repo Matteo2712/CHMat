@@ -62,7 +62,7 @@
 
   nav.tabbar{
     position:fixed; bottom:0; left:0; right:0;
-    display:grid; grid-template-columns:repeat(4,1fr);
+    display:grid; grid-template-columns:repeat(5,1fr);
     background:var(--bg-elev); border-top:1px solid var(--line);
     padding:6px 0 max(6px, env(safe-area-inset-bottom));
     z-index:20;
@@ -209,6 +209,57 @@
 
   .empty{ text-align:center; color:var(--text-dim); padding:40px 20px; font-size:14px; }
   h2.section-title{ font-size:15px; text-transform:uppercase; letter-spacing:.6px; color:var(--text-dim); margin:22px 0 10px; }
+
+  /* ===== PIANO DI STUDIO ===== */
+  .plan-count{ text-align:center; }
+  .plan-count .num{ font-size:40px; font-weight:800; color:var(--red); line-height:1.1; }
+  .plan-count .lbl{ font-size:13px; color:var(--text-dim); margin-top:2px; }
+  .plan-phase{ display:inline-block; font-size:11px; font-weight:800; letter-spacing:.3px; text-transform:uppercase; padding:3px 9px; border-radius:20px; background:var(--red-dim); color:#ff8a80; }
+  .plan-phase.p2{ background:#3a2c12; color:var(--amber); }
+  .plan-phase.p3{ background:#123324; color:var(--green); }
+  .plan-task{ display:flex; gap:12px; align-items:flex-start; padding:12px 0; border-bottom:1px solid var(--line); cursor:pointer; }
+  .plan-task:last-of-type{ border-bottom:none; }
+  .plan-check{ width:24px; height:24px; border-radius:7px; border:2px solid var(--line); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; color:#fff; margin-top:1px; }
+  .plan-task.done .plan-check{ background:var(--green); border-color:var(--green); }
+  .plan-task.done .plan-task-txt{ color:var(--text-dim); text-decoration:line-through; }
+  .plan-task-when{ font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.4px; }
+  .plan-task-txt{ font-size:14.5px; line-height:1.45; margin-top:2px; }
+  .plan-links{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .plan-links button{ width:auto; padding:9px 12px; font-size:13px; }
+  .plan-day-row{ display:flex; gap:10px; align-items:center; padding:9px 2px; border-bottom:1px solid var(--line); font-size:13px; cursor:pointer; }
+  .plan-day-row:last-child{ border-bottom:none; }
+  .plan-day-row .d{ width:74px; flex-shrink:0; color:var(--text-dim); }
+  .plan-day-row .t{ flex:1; }
+  .plan-day-row .s{ width:22px; text-align:center; font-weight:800; }
+  .plan-day-row.today{ background:var(--red-dim); border-radius:8px; padding-left:8px; }
+  .plan-day-row.late .s{ color:var(--amber); }
+  .plan-day-row.ok .s{ color:var(--green); }
+  .book-row{ display:flex; justify-content:space-between; align-items:center; padding:12px 2px; border-bottom:1px solid var(--line); cursor:pointer; font-size:14px; }
+  .book-row:last-child{ border-bottom:none; }
+  .book-row .n{ color:var(--red); font-weight:800; width:34px; flex-shrink:0; }
+  .book-row .t{ flex:1; }
+  .book{ font-size:15px; line-height:1.6; }
+  .book h2{ font-size:19px; margin:4px 0 12px; }
+  .book h3{ font-size:13px; text-transform:uppercase; letter-spacing:.5px; color:var(--red); margin:22px 0 8px; padding-bottom:6px; border-bottom:1px solid var(--line); }
+  .book p{ margin:0 0 10px; }
+  .book ul, .book ol{ margin:0 0 12px; padding-left:22px; }
+  .book li{ margin-bottom:6px; }
+  .book .tbl{ overflow-x:auto; margin:0 0 14px; }
+  .book table{ border-collapse:collapse; width:100%; font-size:13px; line-height:1.4; }
+  .book th, .book td{ border:1px solid var(--line); padding:7px 8px; text-align:left; vertical-align:top; }
+  .book th{ background:var(--bg-elev); color:var(--text-dim); font-weight:700; }
+  .book .trick{ background:#2a2412; border:1px solid #5a4a1c; border-radius:10px; padding:10px 12px 2px; margin:0 0 14px; }
+  .book .trick b.h, .book .de b.h{ display:block; font-size:11.5px; text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
+  .book .trick b.h{ color:var(--amber); }
+  .book .de{ background:#0f2a1c; border:1px solid #1f5a35; border-radius:10px; padding:10px 12px 2px; margin:0 0 14px; }
+  .book .de b.h{ color:var(--green); }
+  .book .de li{ font-style:italic; }
+  .book .star{ color:var(--amber); }
+  .book textarea{ width:100%; min-height:70px; background:var(--bg); border:1px solid var(--line); border-radius:10px; color:var(--text); font-size:15px; padding:10px 12px; font-family:inherit; margin:4px 0 14px; resize:vertical; }
+  .book-nav{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px; }
+  .sim-q{ font-size:18px; font-weight:600; line-height:1.4; margin:8px 0 14px; }
+  .sim-a{ font-size:15.5px; line-height:1.5; color:var(--green); background:#0f2a1c; border:1px solid #1f5a35; border-radius:10px; padding:12px 14px; margin-bottom:14px; }
+  .sim-meta{ display:flex; justify-content:space-between; font-size:12px; color:var(--text-dim); }
 </style>
 </head>
 <body>
@@ -260,6 +311,15 @@
 
   <!-- HOME -->
   <section class="view active" id="view-home">
+    <div class="card" style="cursor:pointer; border-color:var(--red);" onclick="switchTab('plan')">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+        <div>
+          <div style="font-size:11.5px; color:var(--red); font-weight:800; text-transform:uppercase; letter-spacing:.4px;" id="home-plan-head">Piano di studio</div>
+          <div style="font-size:14.5px; font-weight:600; margin-top:3px; line-height:1.4;" id="home-plan-task"></div>
+        </div>
+        <div style="color:var(--text-dim); font-size:20px;">›</div>
+      </div>
+    </div>
     <div class="card">
       <div class="grid2">
         <div class="stat"><div class="num" id="stat-chapters-done">0</div><div class="lbl">capitoli superati</div></div>
@@ -287,6 +347,46 @@
       </div>
     </div>
     <div class="card" id="deleted-list" style="display:none;"></div>
+  </section>
+
+
+  <!-- PIANO DI STUDIO -->
+  <section class="view" id="view-plan">
+    <div class="card plan-count" id="plan-countdown"></div>
+    <h2 class="section-title">Oggi</h2>
+    <div id="plan-today"></div>
+    <h2 class="section-title">Simulazione del colloquio</h2>
+    <div class="card">
+      <div style="color:var(--text-dim); font-size:13px; margin-bottom:12px;">Leggi la domanda ad alta voce, rispondi in tedesco, poi guarda la risposta. Quelle che non sai diventano carte rosse.</div>
+      <div class="grid2">
+        <button class="ghost" onclick="startSim('1-20')">Domande 1–20</button>
+        <button class="ghost" onclick="startSim('21-40')">Domande 21–40</button>
+        <button class="ghost" onclick="startSim('all')">Tutte le 40</button>
+        <button class="ghost" onclick="startSim('pers')">Personali</button>
+      </div>
+      <button class="secondary" style="margin-top:10px;" id="plan-red-btn" onclick="startSim('red')">Carte rosse (0)</button>
+    </div>
+    <h2 class="section-title">Il libro di studio</h2>
+    <div class="card" id="plan-book-list"></div>
+    <h2 class="section-title">Tutti i giorni</h2>
+    <div class="card" id="plan-all-days"></div>
+  </section>
+
+  <!-- LIBRO: lettura di un blocco -->
+  <section class="view" id="view-book">
+    <a class="back-link" onclick="openPlan()">‹ Piano di studio</a>
+    <div class="card book" id="book-content"></div>
+    <div class="book-nav">
+      <button class="ghost" id="book-prev">‹ Precedente</button>
+      <button class="ghost" id="book-next">Successivo ›</button>
+    </div>
+  </section>
+
+  <!-- SIMULAZIONE -->
+  <section class="view" id="view-sim">
+    <a class="back-link" onclick="openPlan()">‹ Piano di studio</a>
+    <div class="test-progress"><div id="sim-progress-bar" style="width:0%"></div></div>
+    <div class="card" id="sim-card"></div>
   </section>
 
   <!-- CAPITOLI: lista -->
@@ -411,6 +511,7 @@
 
 <nav class="tabbar">
   <button class="active" data-view="home" onclick="switchTab('home')"><span class="ic">⌂</span>Home</button>
+  <button data-view="plan" onclick="switchTab('plan')"><span class="ic">☑</span>Piano</button>
   <button data-view="chapters" onclick="switchTab('chapters')"><span class="ic">▤</span>Capitoli</button>
   <button data-view="flash" onclick="switchTab('flash')"><span class="ic">◆</span>Flashcard</button>
   <button data-view="spell" onclick="switchTab('spell')"><span class="ic">✎</span>Ortografia</button>
@@ -1262,6 +1363,7 @@ function switchTab(name){
   if(name==="home") renderHome();
   if(name==="chapters") renderChapterList();
   if(name==="spell") loadSpellingQuestion();
+  if(name==="plan"){ planSelectedIndex = null; renderPlan(); window.scrollTo(0,0); }
   if(name==="flash"){
     if(!studyQueue || studyQueue.length===0 || studyIndex>=studyQueue.length){
       buildStudyQueue();
@@ -1287,6 +1389,18 @@ function renderHome(){
     daily.introducedIds.length + " / " + settings.dailyLimit + " introdotte oggi";
 
   renderDeletedSummary();
+  renderHomePlan();
+}
+function renderHomePlan(){
+  const head = document.getElementById("home-plan-head");
+  const task = document.getElementById("home-plan-task");
+  if(!head || typeof PLAN_DAYS === "undefined") return;
+  const ti = todayPlanIndex();
+  if(ti < 0){ head.textContent = "Piano di studio"; task.textContent = "Il piano è concluso."; return; }
+  const day = PLAN_DAYS[ti];
+  const st = loadPlan().done[day.d] || {};
+  head.textContent = "Piano · giorno " + (ti+1) + " di " + PLAN_DAYS.length + (st.am && st.pm ? " · fatto ✓" : "");
+  task.textContent = (!st.am ? day.am : (!st.pm ? "Sera: " + day.pm : day.am));
 }
 let deletedListOpen = false;
 function toggleDeletedList(){
@@ -2292,6 +2406,643 @@ function spellPick(btn, opt){
 /* =========================================================
    SUPABASE — login e sincronizzazione dei progressi
    ========================================================= */
+
+/* =========================================================
+   PIANO DI STUDIO 21 GIORNI (esame 30.10.2026 ore 11:00)
+   Base: fogli di Carlos (★). Extra (☆) solo se avanza tempo.
+   ========================================================= */
+const EXAM_DATE = new Date(2026, 9, 30, 11, 0, 0);
+const PLAN_KEY = "burgertest_plan_v1";
+
+const PLAN_DAYS = [
+  {d:"2026-10-09", f:1, am:"Blocco 1 – Lo scheletro: la tabella dei 3 livelli", pm:"Blocco 1: ripeti la tabella a voce, poi pagina bianca", books:["b1"]},
+  {d:"2026-10-10", f:1, am:"Blocco 2, parte A – Parlamento federale e tribunali", pm:"Ripasso Blocco 1", books:["b2","b1"]},
+  {d:"2026-10-11", f:1, am:"Blocco 2, parte B – i 7 Bundesräte con i dipartimenti", pm:"Ripasso Blocco 2A + Blocco 1", books:["b2","b1"]},
+  {d:"2026-10-12", f:1, am:"Blocco 3 – Volksrechte (le firme)", pm:"Ripasso Blocco 2B (Bundesrat)", books:["b3","b2"]},
+  {d:"2026-10-13", f:1, am:"Blocco 4, parte A – Grosser Rat e i 7 Regierungsräte", pm:"Ripasso Blocco 3 + Blocco 2B", books:["b4","b3","b2"]},
+  {d:"2026-10-14", f:1, am:"Blocco 4, parte B – tribunali, parlamentari BS, geografia BS", pm:"Ripasso Blocco 4A", books:["b4"]},
+  {d:"2026-10-15", f:1, am:"Blocco 5 – Bürgergemeinde", pm:"Ripasso Blocco 4B + Blocco 1", books:["b5","b4","b1"]},
+  {d:"2026-10-16", f:1, am:"Blocco 6 – Storia, tradizioni, economia di Basilea", pm:"Ripasso Blocco 5 + Blocco 2B", books:["b6","b5","b2"]},
+  {d:"2026-10-17", f:1, am:"Blocco 7 – Svizzera e geografia (con la mappa)", pm:"Ripasso Blocco 6 + Blocco 4A", books:["b7","b6","b4"]},
+  {d:"2026-10-18", f:1, am:"Blocco 8 – Date storiche", pm:"Ripasso Blocco 7 + Blocco 5 + carte rosse", books:["b8","b7","b5"], red:true},
+  {d:"2026-10-19", f:1, am:"Blocco 9 – Scrivi le tue risposte personali in tedesco", pm:"Ripasso Blocco 8 + Blocco 3", books:["b9","b8","b3"]},
+  {d:"2026-10-20", f:2, am:"Pagina bianca: Blocchi 1, 2, 3 (scrivi a mano, poi confronta)", pm:"Carte rosse", books:["b1","b2","b3"], red:true},
+  {d:"2026-10-21", f:2, am:"Pagina bianca: Blocchi 4, 5", pm:"Carte rosse", books:["b4","b5"], red:true},
+  {d:"2026-10-22", f:2, am:"Pagina bianca: Blocchi 6, 7, 8", pm:"Carte rosse", books:["b6","b7","b8"], red:true},
+  {d:"2026-10-23", f:2, am:"Simulazione 1: domande 1–20 a voce, in tedesco", pm:"Rileggi solo le risposte sbagliate (carte rosse)", sim:"1-20", red:true},
+  {d:"2026-10-24", f:2, am:"Solo punti deboli + mappa mentale", pm:"Carte rosse", red:true},
+  {d:"2026-10-25", f:2, am:"Simulazione 2: domande 21–40 + personali", pm:"Carte rosse", sim:"21-40", sim2:"pers", red:true},
+  {d:"2026-10-26", f:3, am:"Tutti i nomi a memoria: 7 Bundesräte, 7 Regierungsräte, 5 parlamentari BS. Controlla su admin.ch e bs.ch che non siano cambiati", pm:"Carte rosse", books:["b2","b4"], red:true},
+  {d:"2026-10-27", f:3, am:"Simulazione 3 completa: tutte le domande (30 min)", pm:"Rileggi le sbagliate (carte rosse)", sim:"all", sim2:"pers", red:true},
+  {d:"2026-10-28", f:3, am:"Pagina bianca finale: scheletro + numeri + nomi", pm:"Carte rosse", books:["b1","finale"], red:true},
+  {d:"2026-10-29", f:3, am:"Solo il Foglio finale, 2 volte. Niente di nuovo", pm:"A letto presto", books:["finale"]},
+  {d:"2026-10-30", f:3, am:"Ore 9: Foglio finale una volta, con calma", pm:"Ore 11: ESAME – Viel Glück!", books:["finale"]}
+];
+const PHASES = {1:"Imparare", 2:"Consolidare", 3:"Rifinire"};
+
+/* ---------- Libro di studio ---------- */
+const BOOK = [
+{id:"regole", n:"★", t:"Come studiare: 6 regole", html:`
+<h2>Come studiare: 6 regole anti-dimenticanza</h2>
+<p>La memoria non si fissa leggendo tante volte: si fissa <b>sforzandosi di ricordare</b>, poco alla volta, a intervalli.</p>
+<ol>
+<li><b>Poco ma ogni giorno.</b> Mattina 25 minuti (blocco nuovo), sera 15 minuti (ripasso). Mai più di un blocco nuovo al giorno.</li>
+<li><b>Leggi una volta, poi copri.</b> Dopo la prima lettura copri e ripeti a voce alta. Quello che non esce lo rileggi e riprovi.</li>
+<li><b>Parla in tedesco.</b> Il colloquio è in tedesco: ripeti ad alta voce le frasi di «Dillo in tedesco».</li>
+<li><b>Pagina bianca.</b> A fine blocco scrivi a mano tutto quello che ricordi, poi confronta e segna in rosso cosa mancava.</li>
+<li><b>Carte rosse.</b> Nella Simulazione, ogni risposta che non sai diventa carta rossa. Esce dalle rosse solo dopo 3 risposte giuste di fila.</li>
+<li><b>Trucchi e immagini.</b> Più l'immagine è buffa, più resta. Dormire bene è parte dello studio.</li>
+</ol>
+<p>★ = dai fogli di Carlos (obbligatorio) · ☆ = extra, solo se avanza tempo.</p>`},
+
+{id:"b1", n:"1", t:"Lo scheletro: i 3 livelli", html:`
+<h2>Blocco 1 – Lo scheletro: i 3 livelli</h2>
+<p>La Svizzera ha <b>3 livelli</b> (3 Ebenen): <b>1. Bund</b>, <b>2. Kanton</b> (Basel-Stadt), <b>3. Gemeinde</b> – a Basilea il terzo livello è la <b>Bürgergemeinde</b>. Ogni livello ha parlamento, governo e (quasi sempre) tribunali: è la <b>Gewaltenteilung</b> ★ (Legislative = fa le leggi, Exekutive = governa, Judikative = giudica).</p>
+<div class="tbl"><table>
+<tr><th>★</th><th>1. Bund</th><th>2. Kanton BS</th><th>3. Bürgergemeinde</th></tr>
+<tr><td><b>Parlament</b></td><td>Nationalrat 200 + Ständerat 46</td><td>Grosser Rat 100</td><td>Bürgergemeinderat 40</td></tr>
+<tr><td>tagt im</td><td>Bundeshaus, Bern</td><td>Rathaus</td><td>Stadthaus</td></tr>
+<tr><td>gewählt von</td><td>Volk</td><td>Volk</td><td>Bürgerschaft</td></tr>
+<tr><td><b>Regierung</b></td><td>Bundesrat 7</td><td>Regierungsrat 7</td><td>Bürgerrat 7</td></tr>
+<tr><td>gewählt von</td><td><b>Vereinigte Bundesversammlung</b> (246)</td><td><b>Volk</b></td><td><b>Bürgergemeinderat</b></td></tr>
+<tr><td>alle … Jahre</td><td>4</td><td>4</td><td>6</td></tr>
+<tr><td>Wahlen</td><td>2023, 2027</td><td>2024, 2028</td><td>2023, 2029</td></tr>
+<tr><td><b>Gerichte</b></td><td>4 Bundesgerichte</td><td>4 kantonale</td><td><b>keine</b></td></tr>
+<tr><td>Initiative</td><td>100'000</td><td>3'000</td><td>2'000</td></tr>
+<tr><td>Referendum</td><td>50'000</td><td>2'000</td><td>1'000</td></tr>
+</table></div>
+<div class="trick"><b class="h">Trucco per ricordare</b><ul>
+<li><b>Il 7 governa sempre:</b> Bundesrat, Regierungsrat, Bürgerrat.</li>
+<li><b>Parlamenti che scendono:</b> 246 → 100 → 40.</li>
+<li><b>Anni: 4 – 4 – 6.</b> Solo la Bürgergemeinde vota ogni 6 anni.</li>
+<li>«<b>Il popolo elegge il governo solo nel Cantone.</b>» Nel Bund e nella Bürgergemeinde è il parlamento che elegge il governo.</li>
+<li><b>Tribunali:</b> 4 – 4 – zero.</li></ul></div>
+<div class="de"><b class="h">Dillo in tedesco</b><ul>
+<li>Die Schweiz hat drei Ebenen: den Bund, die Kantone und die Gemeinden.</li>
+<li>Es gibt eine klare Gewaltenteilung: Legislative, Exekutive und Judikative.</li>
+<li>Basel hat keine Einwohnergemeinde. Die dritte Ebene ist die Bürgergemeinde.</li></ul></div>`},
+
+{id:"b2", n:"2", t:"Der Bund: Parlament, Bundesrat, Gerichte", html:`
+<h2>Blocco 2 – Der Bund (1. Ebene)</h2>
+<h3>Parte A – Parlamento e tribunali ★</h3>
+<p>Il parlamento si chiama <b>Bundesversammlung</b>: <b>due camere con gli stessi poteri</b> (gleichberechtigt), che di solito si riuniscono separate. Sede: <b>Bundeshaus</b> nella <b>Bundesstadt Bern</b>.</p>
+<ul>
+<li><b>Nationalrat</b> (grosse Kammer) = <b>200</b>. Seggi divisi tra i cantoni <b>in base alla popolazione</b> (Proporzsystem).</li>
+<li><b>Ständerat</b> (kleine Kammer) = <b>46</b>. Ogni cantone <b>2</b>, ogni Halbkanton <b>1</b>. Basel-Stadt ne ha 1.</li>
+<li>Eletti dal <b>popolo</b> ogni <b>4 anni</b> (2023, 2027).</li>
+</ul>
+<p>Insieme formano la <b>Vereinigte Bundesversammlung</b> = 200 + 46 = <b>246</b>. Elegge:</p>
+<ol><li>i <b>7 Bundesräte</b></li><li>il <b>Bundespräsident</b> (uno dei 7, <b>ogni anno</b>)</li><li>i <b>Bundesrichter</b></li><li>il <b>Bundeskanzler</b></li><li>il <b>General</b>, solo in caso di guerra</li></ol>
+<div class="tbl"><table>
+<tr><th>Tribunale federale</th><th>Città</th><th>Trucco</th></tr>
+<tr><td><b>Bundesgericht</b></td><td><b>Lausanne</b></td><td>il più alto: L = Legge suprema</td></tr>
+<tr><td>Bundesversicherungsgericht</td><td>Luzern</td><td>Lucerna assicura</td></tr>
+<tr><td>Bundesstrafgericht</td><td>Bellinzona</td><td>i Banditi a Bellinzona</td></tr>
+<tr><td>Bundesverwaltungsgericht</td><td>St. Gallen</td><td>San Gallo = gli uffici</td></tr>
+</table></div>
+<p>I giudici federali li elegge la Vereinigte Bundesversammlung.</p>
+<h3>Parte B – Der Bundesrat ★</h3>
+<p>Governo (Exekutive): <b>Bundesrat, 7 membri</b>, eletti dalla Vereinigte Bundesversammlung <b>ogni 4 anni</b>. Partiti: 2 SVP, 2 FDP, 2 SP, 1 Mitte.</p>
+<div class="tbl"><table>
+<tr><th>Nome</th><th>Dip.</th><th>Trucco</th></tr>
+<tr><td><b>Guy Parmelin</b> (SVP)<br>Bundespräsident 2026</td><td>WBF – Wirtschaft, Bildung, Forschung</td><td>il Presidente guida l'economia</td></tr>
+<tr><td><b>Ignazio Cassis</b> (FDP)<br>Vizepräsident 2026</td><td>EDA – Auswärtiges (Esteri)</td><td>il ticinese parla con l'estero</td></tr>
+<tr><td><b>Karin Keller-Sutter</b> (FDP)</td><td>EFD – Finanzen</td><td>Keller = cantina = cassaforte</td></tr>
+<tr><td><b>Albert Rösti</b> (SVP)</td><td>UVEK – Umwelt, Verkehr, Energie, Kommunikation</td><td>la Rösti cuoce con l'Energia</td></tr>
+<tr><td><b>Elisabeth Baume-Schneider</b> (SP)</td><td>EDI – Inneres</td><td><b>E</b>lisabeth <b>D</b>ell'<b>I</b>nterno</td></tr>
+<tr><td><b>Beat Jans</b> (SP)</td><td>EJPD – Justiz und Polizei</td><td><b>J</b>ans = <b>J</b>ustiz, è di Basilea</td></tr>
+<tr><td><b>Martin Pfister</b> (Mitte)</td><td>VBS – Verteidigung, Bevölkerungsschutz, Sport</td><td>Pfister = Pistole</td></tr>
+</table></div>
+<p><b>Bundeskanzler: Viktor Rossi</b> ★. Nel 2025 la presidente era Karin Keller-Sutter.</p>
+<div class="de"><b class="h">Dillo in tedesco</b><ul>
+<li>Das Parlament heisst Bundesversammlung. Es hat zwei Kammern: den Nationalrat mit 200 und den Ständerat mit 46 Mitgliedern.</li>
+<li>Die Regierung ist der Bundesrat mit 7 Mitgliedern. Er wird von der Vereinigten Bundesversammlung gewählt.</li>
+<li>Der Bundespräsident 2026 ist Guy Parmelin.</li>
+<li>Das Bundesgericht ist in Lausanne.</li></ul></div>`},
+
+{id:"b3", n:"3", t:"Politische Rechte: Initiative, Referendum", html:`
+<h2>Blocco 3 – Politische Rechte ★</h2>
+<ol>
+<li><b>Stimm- und Wahlrecht</b> – votare ed eleggere: <b>dai 18 anni</b>, serve la <b>cittadinanza svizzera</b>.</li>
+<li><b>Initiative</b> – firme per <b>chiedere una modifica</b> della Costituzione (Bund e Cantone) o di una legge (solo Cantone). Proposta <b>nuova</b>.</li>
+<li><b>Referendum</b> – firme per <b>votare su una decisione già presa dal parlamento</b>. Si vota <b>dopo</b> (nachträglich).</li>
+<li><b>Petition</b> – <b>chiunque</b> può mandare una richiesta scritta (Bittschrift) a qualsiasi autorità. Nessun numero di firme.</li>
+</ol>
+<div class="tbl"><table>
+<tr><th>Firme</th><th>Bund</th><th>Kanton</th><th>Bürgergemeinde</th></tr>
+<tr><td><b>Initiative</b></td><td><b>100'000</b></td><td><b>3'000</b></td><td><b>2'000</b></td></tr>
+<tr><td><b>Referendum</b></td><td><b>50'000</b></td><td><b>2'000</b></td><td><b>1'000</b></td></tr>
+</table></div>
+<p>☆ Bund: Initiative in 18 mesi; Referendum in 100 giorni.</p>
+<div class="trick"><b class="h">Trucco per ricordare</b><ul>
+<li><b>I</b>nitiative = <b>I</b>dea nuova. <b>R</b>eferendum = <b>R</b>ipensarci su una cosa già decisa.</li>
+<li>Nel Bund il Referendum è la <b>metà</b>: 100'000 → 50'000.</li>
+<li>Sotto il Bund, le migliaia in fila: <b>3 – 2 – 2 – 1</b>.</li>
+<li>L'Initiative chiede sempre più firme del Referendum.</li></ul></div>
+<div class="de"><b class="h">Dillo in tedesco</b><ul>
+<li>Mit einer Initiative verlangen die Stimmbürger eine Verfassungsänderung. Im Bund braucht es 100'000 Unterschriften.</li>
+<li>Mit einem Referendum stimmt das Volk über einen Beschluss des Parlaments ab. Im Bund braucht es 50'000 Unterschriften.</li>
+<li>Eine Petition kann jede Person an jede Behörde schicken.</li>
+<li>Stimmen und wählen darf man ab 18 Jahren mit dem Schweizer Bürgerrecht.</li></ul></div>`},
+
+{id:"b4", n:"4", t:"Der Kanton Basel-Stadt", html:`
+<h2>Blocco 4 – Der Kanton Basel-Stadt (2. Ebene)</h2>
+<h3>Parte A – Dati e politica ★</h3>
+<p>Basel-Stadt è <b>uno dei 26 cantoni</b>; 6 cantoni hanno un solo seggio al Ständerat, BS è uno di questi. <b>3 comuni: Basel, Riehen, Bettingen</b>. Abitanti (2023): <b>200'000</b>, <b>33% stranieri da 166 Paesi</b>. ☆ Il cantone più piccolo: 37 km².</p>
+<ul>
+<li><b>Grosser Rat</b> – <b>100 membri</b> (Grossrätinnen und Grossräte), si riunisce nel <b>Rathaus</b>. Eletto dal <b>popolo</b> ogni <b>4 anni</b>.</li>
+<li><b>Regierungsrat</b> – <b>7 membri</b>, eletti dal <b>popolo</b> ogni <b>4 anni</b> (2024, 2028). Il <b>Regierungspräsident</b> è eletto <b>separatamente</b>.</li>
+</ul>
+<div class="tbl"><table>
+<tr><th>Regierungsrat 2025–2028</th><th>Dip.</th><th>Trucco</th></tr>
+<tr><td><b>Conradin Cramer</b> (LDP)<br>Regierungspräsident</td><td>PD – Präsidialdepartement</td><td>Cramer = il Capo</td></tr>
+<tr><td><b>Esther Keller</b> (GLP)</td><td>BVD – Bau und Verkehr</td><td>Keller = cantina: si costruisce</td></tr>
+<tr><td><b>Mustafa Atici</b> (SP)</td><td>ED – Erziehung</td><td>Atici → Aula</td></tr>
+<tr><td><b>Tanja Soland</b> (SP)</td><td>FD – Finanzen</td><td>Soland → Soldi</td></tr>
+<tr><td><b>Lukas Engelberger</b> (Mitte)</td><td>GD – Gesundheit</td><td>Engel = angelo della salute</td></tr>
+<tr><td><b>Stephanie Eymann</b> (LDP)</td><td>JSD – Justiz und Sicherheit</td><td>«Ey, Mann!» grida il poliziotto</td></tr>
+<tr><td><b>Kaspar Sutter</b> (SP)</td><td>WSU – Wirtschaft, Soziales, Umwelt</td><td><b>S</b>utter = <b>S</b>oziales</td></tr>
+</table></div>
+<p>Attenzione: <b>Keller-Sutter</b> è nel Bundesrat; <b>Esther Keller</b> e <b>Kaspar Sutter</b> sono a Basilea.</p>
+<h3>Parte B – Tribunali, Berna, geografia ★</h3>
+<div class="tbl"><table>
+<tr><th>Tribunale cantonale</th><th>Indirizzo</th></tr>
+<tr><td>Appellationsgericht</td><td>Bäumleingasse</td></tr>
+<tr><td>Zivilgericht</td><td>Bäumleingasse</td></tr>
+<tr><td>Sozialversicherungsgericht</td><td>Bäumleingasse</td></tr>
+<tr><td><b>Strafgericht</b></td><td><b>Schützenmattstrasse</b> (Schützen = tiratori)</td></tr>
+</table></div>
+<p>I <b>presidenti</b> dei tribunali li elegge il <b>popolo ogni 6 anni</b>; i <b>giudici</b> li elegge il <b>Grosser Rat</b> (dal 2016).</p>
+<p><b>Basel-Stadt a Berna:</b> Ständerat (1): <b>Eva Herzog</b> (SP). Nationalrat (4): <b>Katja Christ</b> (GLP), <b>Sarah Wyss</b> (SP), <b>Sibel Arslan</b> (BastA!/Grüne), <b>Patricia von Falkenstein</b> (LDP).</p>
+<div class="trick"><b class="h">Trucco per ricordare</b><ul>
+<li><b>La Duchessa</b> (Herzog = duca) <b>Eva</b> siede da sola al Ständerat.</li>
+<li>Al Nationalrat: un <b>Cristo</b> (Christ), un <b>bianco</b> (Wyss ≈ weiss), un <b>leone</b> (Arslan = leone in turco), un <b>falco</b> (Falkenstein).</li></ul></div>
+<ul>
+<li>Confina con <b>Deutschland</b> (nord), <b>Frankreich</b> (ovest), <b>Basel-Landschaft</b> (est, sud, ovest).</li>
+<li>Comuni vicini in BL: Birsfelden, Muttenz, Münchenstein, Reinach, Binningen, Bottmingen, Allschwil. In Francia: Saint-Louis, Huningue. In Germania: Weil am Rhein, Lörrach, Inzlingen, Grenzach-Wyhlen.</li>
+<li>Regione: <b>Regio Basiliensis</b> / <b>Dreiland</b> (Dreiländereck).</li>
+<li>Nordwestschweiz: Basel-Stadt, Basel-Landschaft, Aargau, Solothurn, (Jura).</li>
+<li>Fiumi: <b>Birs</b> (Laufental), <b>Birsig</b> (Leimental/Birsigtal), <b>Wiese</b> (Wiesental, D) → tutti nel <b>Rhein</b>.</li>
+</ul>
+<div class="de"><b class="h">Dillo in tedesco</b><ul>
+<li>Der Kanton Basel-Stadt hat drei Gemeinden: Basel, Riehen und Bettingen.</li>
+<li>Das Parlament ist der Grosse Rat mit 100 Mitgliedern. Er tagt im Rathaus.</li>
+<li>Die Regierung ist der Regierungsrat mit 7 Mitgliedern, vom Volk gewählt. Regierungspräsident ist Conradin Cramer.</li>
+<li>Unsere Ständerätin ist Eva Herzog.</li></ul></div>`},
+
+{id:"b5", n:"5", t:"Die Bürgergemeinde", html:`
+<h2>Blocco 5 – Die Bürgergemeinde (3. Ebene) ★</h2>
+<p><b>La domanda più probabile:</b> <i>Was unterscheidet Basel von allen anderen Gemeinden der Schweiz?</i> → <b>Basel hat keine Einwohnergemeinde.</b> Al terzo livello c'è la <b>Bürgergemeinde</b>, il comune dei cittadini con <b>cittadinanza di Basilea</b> (Heimatort). È lei che fa il tuo colloquio con la sua <b>Einbürgerungskommission</b>.</p>
+<ul>
+<li><b>Bürgerschaft:</b> circa <b>54'000</b>, di cui circa <b>46'500 con diritto di voto</b> (circa 50'000 abitano in città).</li>
+<li><b>Bürgergemeinderat</b> (parlamento): <b>40 membri</b>, nello <b>Stadthaus</b>, eletto ogni <b>6 anni</b> dai cittadini di Basilea.</li>
+<li><b>Bürgerrat</b> (governo): <b>7 membri</b>, eletto <b>dal Bürgergemeinderat</b> ogni 6 anni (2023, 2029).</li>
+<li><b>Tribunali: keine.</b></li>
+</ul>
+<h3>I compiti – 3 case + 2 sorveglianze</h3>
+<ol>
+<li><b>Bürgerspital Basel (BSB)</b> – il reparto più grande, circa <b>1'500 collaboratori</b>: <b>anziani</b> e <b>persone con disabilità</b>.</li>
+<li><b>Bürgerliches Waisenhaus</b> – <b>bambini e ragazzi</b> che non possono vivere in famiglia, più aiuti alle famiglie.</li>
+<li><b>Zentrale Dienste</b> – <b>Bürgerrechtsdienst = naturalizzazioni</b> e <b>patrimonio</b>. Collegata la <b>Forstverwaltung</b>: boschi (es. <b>Birsfelder Hard / Hardwald</b>).</li>
+<li><b>Sorveglia</b> la <b>Christoph Merian Stiftung (CMS)</b> – finanzia progetti per <b>Soziales, Kultur und Natur</b>.</li>
+<li><b>Sorveglia</b> le <b>Zünfte und Gesellschaften</b>.</li>
+</ol>
+<div class="trick"><b class="h">Immagine per ricordare</b><p>Un <b>ospedale</b> (anziani), un <b>orfanotrofio</b> (bambini), un <b>ufficio</b> con un bosco dietro (naturalizzazioni e foreste); sopra, due guardiani che controllano <b>la fondazione Merian</b> e <b>le corporazioni</b>.</p></div>
+<div class="de"><b class="h">Dillo in tedesco</b><ul>
+<li>Basel hat keine Einwohnergemeinde. Darum ist die Bürgergemeinde die dritte Ebene.</li>
+<li>Das Parlament ist der Bürgergemeinderat mit 40 Mitgliedern, die Regierung ist der Bürgerrat mit 7 Mitgliedern.</li>
+<li>Die Bürgergemeinde ist zuständig für die Einbürgerungen, das Bürgerspital und das Waisenhaus.</li>
+<li>Sie beaufsichtigt die Christoph Merian Stiftung und die Zünfte und Gesellschaften.</li></ul></div>`},
+
+{id:"b6", n:"6", t:"Basel: Geschichte, Brauchtum, Wirtschaft", html:`
+<h2>Blocco 6 – Basel: Geschichte, Brauchtum, Wirtschaft</h2>
+<h3>Storia di Basilea ★ – come una passeggiata</h3>
+<p>Sali sul <b>Münsterhügel</b>: lì vivevano i primi abitanti, i <b>Kelten</b> (rifugio fortificato, Fluchtburg); <b>poi arrivarono i Romani</b>. Scendi al Reno e attraversi la <b>Mittlere Rheinbrücke</b>, costruita nel <b>1225/26</b>. Nel <b>1356</b> un grande <b>terremoto</b> (Erdbeben) distrugge la città. Nel <b>1460</b> <b>Papa Pio II</b> fonda l'<b>Universität</b>; arrivano <b>stampa</b> (Buchdruck) e <b>cartiere</b> (Papiermühlen). Delle mura restano: <b>Letzimauer, St. Alban-Tor, St. Johann-Tor, Spalentor</b>.</p>
+<div class="trick"><b class="h">Trucco date</b><p><b>1225 ponte → 1356 terremoto → 1460 università → 1471 fiera → 1501 entra nella Svizzera</b></p></div>
+<h3>Tradizioni ★</h3>
+<p><b>Vogel Gryff</b> – festa del <b>Kleinbasel</b>, delle <b>3 Ehrengesellschaften</b>, il <b>13, 20 o 27 gennaio</b> (2025: 27.01; 2026: 13.01).</p>
+<div class="tbl"><table>
+<tr><th>Figura</th><th>Società</th><th>Trucco</th></tr>
+<tr><td><b>Löwe</b></td><td>zum Rebhaus</td><td>il leone beve vino (Reb = vite)</td></tr>
+<tr><td><b>Wilder Mann</b></td><td>zur Haeren</td><td>è tutto peli (Haare)</td></tr>
+<tr><td><b>Vogel Gryff</b></td><td>zum Greifen</td><td>Greif = grifone</td></tr>
+</table></div>
+<ul>
+<li><b>Fasnacht / Morgestraich</b> – tradizione d'inverno. ☆ UNESCO; inizia il lunedì dopo le Ceneri alle <b>4:00</b>, dura <b>72 ore</b>.</li>
+<li><b>Basler Herbstmesse</b> – la <b>fiera più antica della Svizzera</b> (dal <b>1471</b>).</li>
+</ul>
+<h3>Economia e turismo ★</h3>
+<ul>
+<li>Pharma: <b>Roche, Novartis</b>.</li>
+<li>Fiere: <b>BASELWORLD, Art Basel</b>.</li>
+<li>Da vedere: quasi <b>40 musei</b>, <b>Altstadt</b>, <b>Münster</b>, <b>Fähren</b> (traghetti sul Reno).</li>
+</ul>
+<p>☆ Kunstmuseum (collezione pubblica più antica del mondo), Fondation Beyeler (Riehen); St. Chrischona (522 m); 1529 Riforma; 1897 Congresso sionista. Personaggi: Erasmus, Paracelsus, Nietzsche, Jacob Burckhardt, Roger Federer.</p>
+<div class="de"><b class="h">Dillo in tedesco</b><ul>
+<li>Die ersten Bewohner waren die Kelten auf dem Münsterhügel, später kamen die Römer.</li>
+<li>1356 gab es ein grosses Erdbeben. 1460 wurde die Universität gegründet.</li>
+<li>Der Vogel Gryff ist das Fest der drei Kleinbasler Ehrengesellschaften: Löwe, Wilder Mann und Vogel Gryff.</li>
+<li>Die Herbstmesse ist die älteste Messe der Schweiz.</li>
+<li>Wichtige Firmen sind Roche und Novartis.</li></ul></div>`},
+
+{id:"b7", n:"7", t:"Die Schweiz: Allgemeines und Geographie", html:`
+<h2>Blocco 7 – Die Schweiz: Allgemeines und Geographie</h2>
+<h3>Dati generali ★</h3>
+<ul>
+<li>Abitanti: <b>9 milioni</b> (2022: circa <b>2,25 milioni stranieri</b>).</li>
+<li>Superficie: <b>41'300 km²</b>.</li>
+<li>Confini: <b>Deutschland</b> (nord), <b>Frankreich</b> (ovest), <b>Italien</b> (sud), <b>Österreich</b> (est), <b>Liechtenstein</b> (principato, est).</li>
+<li>Lingue: <b>Deutsch, Französisch, Italienisch, Rätoromanisch</b>.</li>
+<li>Capitale: <b>Bundesstadt Bern</b>, <b>Bundeshaus</b>.</li>
+</ul>
+<div class="trick"><b class="h">Trucco confini</b><p>In senso orario dall'alto: Germania, Austria + Liechtenstein, Italia, Francia – «<b>G</b>iro <b>A</b>lto <b>L</b>ungo <b>I</b>n <b>F</b>rancia».</p></div>
+<p>☆ 1° agosto festa nazionale; inno Schweizerpsalm; CH = Confoederatio Helvetica; Alpi 60%, Mittelland 30%, Giura 10%.</p>
+<h3>Laghi, fiumi, montagne ★</h3>
+<div class="tbl"><table>
+<tr><th>Seen</th><th>Dove</th></tr>
+<tr><td>Bodensee</td><td>St. Gallen</td></tr>
+<tr><td>Genfersee</td><td>Genf</td></tr>
+<tr><td>Lago Maggiore</td><td>Ticino</td></tr>
+<tr><td>Vierwaldstättersee</td><td>Luzern – qui la <b>Rütliwiese</b></td></tr>
+<tr><td><b>Neuenburgersee</b></td><td>il più grande <b>interamente in Svizzera</b></td></tr>
+</table></div>
+<div class="tbl"><table>
+<tr><th>Flüsse</th><th>Dove</th></tr>
+<tr><td>Rhein</td><td>Basilea</td></tr>
+<tr><td>Reuss</td><td>Uri</td></tr>
+<tr><td>Rhône</td><td>Vallese → Ginevra</td></tr>
+<tr><td>Tessin</td><td>Bellinzona</td></tr>
+</table></div>
+<div class="tbl"><table>
+<tr><th>Berge</th><th>Dove</th></tr>
+<tr><td>Eiger, Mönch, Jungfrau (UNESCO)</td><td>Berner Alpen, Bern/Wallis (3'450 m Jungfraujoch)</td></tr>
+<tr><td>Dufourspitze</td><td>la più alta (☆ 4'634 m)</td></tr>
+<tr><td>Matterhorn</td><td>4'478 m, Zermatt</td></tr>
+<tr><td>Pilatus</td><td>Luzern, 2'118 m</td></tr>
+<tr><td>Dom (Mischabel)</td><td>Walliser Alpen, 4'545 m</td></tr>
+</table></div>
+<h3>La mappa: 26 cantoni ★</h3>
+<div class="tbl"><table>
+<tr><th>Sigla</th><th>Kanton</th><th>Hauptort</th></tr>
+<tr><td><b>BS</b></td><td><b>Basel-Stadt</b></td><td><b>Basel</b></td></tr>
+<tr><td><b>BL</b></td><td><b>Basel-Landschaft</b></td><td><b>Liestal</b></td></tr>
+<tr><td><b>AG</b></td><td><b>Aargau</b></td><td><b>Aarau</b></td></tr>
+<tr><td><b>SO</b></td><td><b>Solothurn</b></td><td><b>Solothurn</b></td></tr>
+<tr><td><b>JU</b></td><td><b>Jura</b></td><td><b>Delémont</b></td></tr>
+<tr><td>ZH</td><td>Zürich</td><td>Zürich</td></tr>
+<tr><td>BE</td><td>Bern</td><td>Bern</td></tr>
+<tr><td>LU</td><td>Luzern</td><td>Luzern</td></tr>
+<tr><td>UR</td><td>Uri</td><td>Altdorf</td></tr>
+<tr><td>SZ</td><td>Schwyz</td><td>Schwyz</td></tr>
+<tr><td>OW</td><td>Obwalden</td><td>Sarnen</td></tr>
+<tr><td>NW</td><td>Nidwalden</td><td>Stans</td></tr>
+<tr><td>GL</td><td>Glarus</td><td>Glarus</td></tr>
+<tr><td>ZG</td><td>Zug</td><td>Zug</td></tr>
+<tr><td>FR</td><td>Fribourg</td><td>Fribourg</td></tr>
+<tr><td>SH</td><td>Schaffhausen</td><td>Schaffhausen</td></tr>
+<tr><td>AR</td><td>Appenzell Ausserrhoden</td><td>Herisau</td></tr>
+<tr><td>AI</td><td>Appenzell Innerrhoden</td><td>Appenzell</td></tr>
+<tr><td>SG</td><td>St. Gallen</td><td>St. Gallen</td></tr>
+<tr><td>GR</td><td>Graubünden</td><td>Chur</td></tr>
+<tr><td>TG</td><td>Thurgau</td><td>Frauenfeld</td></tr>
+<tr><td>TI</td><td>Ticino</td><td>Bellinzona</td></tr>
+<tr><td>VD</td><td>Vaud</td><td>Lausanne</td></tr>
+<tr><td>VS</td><td>Valais / Wallis</td><td>Sion</td></tr>
+<tr><td>NE</td><td>Neuchâtel</td><td>Neuchâtel</td></tr>
+<tr><td>GE</td><td>Genève</td><td>Genève</td></tr>
+</table></div>
+<p>Altre città sulla mappa: Olten (SO), Laufen (BL). Da riconoscere: fiumi Aare, Limmat, Thur, Inn, Doubs, Birs, Saane, Simme, Kander, Moesa, Maira, Poschiavino; laghi Lac de Neuchâtel, Bielersee, Murtensee, Hallwilersee, Sempachersee, Baldeggersee, Zugersee, Zürichsee, Walensee, Sarnersee, Lungerersee, Lauerzersee, Ägerisee, Lago di Lugano.</p>
+<div class="de"><b class="h">Dillo in tedesco</b><ul>
+<li>Die Schweiz hat etwa 9 Millionen Einwohner und ist 41'300 Quadratkilometer gross.</li>
+<li>Die Nachbarländer sind Deutschland, Frankreich, Italien, Österreich und Liechtenstein.</li>
+<li>Die Landessprachen sind Deutsch, Französisch, Italienisch und Rätoromanisch.</li>
+<li>Der grösste See ganz in der Schweiz ist der Neuenburgersee.</li></ul></div>`},
+
+{id:"b8", n:"8", t:"Geschichtsdaten", html:`
+<h2>Blocco 8 – Geschichtsdaten</h2>
+<p><b>Le 5 date di Carlos ★</b></p>
+<div class="tbl"><table>
+<tr><th>Anno</th><th>Cosa</th><th>Dillo in tedesco</th></tr>
+<tr><td><b>1291</b></td><td>Nascita della Svizzera (Rütli: Uri, Schwyz, Unterwalden)</td><td><i>1291 wurde die Schweiz gegründet.</i></td></tr>
+<tr><td><b>1501</b></td><td>Basilea entra nella Confederazione</td><td><i>1501 ist Basel der Eidgenossenschaft beigetreten.</i></td></tr>
+<tr><td><b>1833</b></td><td>Separazione Basel-Stadt / Basel-Landschaft</td><td><i>1833 kam es zur Kantonstrennung.</i></td></tr>
+<tr><td><b>1848</b></td><td>Prima Bundesverfassung</td><td><i>1848 wurde die erste Bundesverfassung beschlossen.</i></td></tr>
+<tr><td><b>1971</b></td><td>Le donne votano</td><td><i>Seit 1971 dürfen Frauen wählen und abstimmen.</i></td></tr>
+</table></div>
+<div class="trick"><b class="h">Trucco per ricordare</b><ul>
+<li><b>1291</b>: tre cantoni si stringono la mano il 1° agosto.</li>
+<li><b>1501</b>: Basilea arriva 210 anni dopo, all'inizio del 1500.</li>
+<li><b>1833 → 1848</b>: prima Basilea si <b>divide</b>, 15 anni dopo la Svizzera si <b>unisce</b>.</li>
+<li><b>1971</b>: le donne votano da poco più di 50 anni. ☆ A Basel-Stadt dal 1966.</li></ul></div>
+<p><b>Date di Basilea ★</b>: 1225/26 Mittlere Rheinbrücke · 1356 Erdbeben · 1460 Universität · 1471 Herbstmesse.</p>
+<p>☆ Extra: 1315 Morgarten · 1499 Pace di Basilea · 1515 Marignano (neutralità) · 1815 Congresso di Vienna · 1847 Sonderbundskrieg · 1979 Canton Giura · 2002 ONU.</p>`},
+
+{id:"b9", n:"9", t:"Domande personali (scrivi le tue risposte)", html:"__PERSONAL__"},
+
+{id:"finale", n:"F", t:"Foglio finale (29 e 30 ottobre)", html:`
+<h2>Foglio finale</h2>
+<p>Solo questo, letto con calma. Niente di nuovo.</p>
+<ol>
+<li><b>Basel hat keine Einwohnergemeinde</b> → 3. Ebene = Bürgergemeinde.</li>
+<li><b>Parlamenti:</b> Nationalrat 200 + Ständerat 46 = 246 · Grosser Rat 100 · Bürgergemeinderat 40.</li>
+<li><b>Governi: sempre 7.</b> Bundesrat (dal Parlamento) · Regierungsrat (dal Volk) · Bürgerrat (dal Bürgergemeinderat).</li>
+<li><b>Anni:</b> 4 – 4 – 6.</li>
+<li><b>Firme:</b> Initiative 100'000 / 3'000 / 2'000 · Referendum 50'000 / 2'000 / 1'000.</li>
+<li><b>Bundesrat:</b> Parmelin (Präsident, WBF) · Cassis (Vize, EDA) · Keller-Sutter (EFD) · Rösti (UVEK) · Baume-Schneider (EDI) · Jans (EJPD) · Pfister (VBS) · Kanzler Viktor Rossi.</li>
+<li><b>Regierungsrat BS:</b> Cramer (Präsident, PD) · Keller (BVD) · Atici (ED) · Soland (FD) · Engelberger (GD) · Eymann (JSD) · Sutter (WSU).</li>
+<li><b>Basel a Berna:</b> Ständerat Eva Herzog · Nationalrat Christ, Wyss, Arslan, von Falkenstein.</li>
+<li><b>Tribunali federali:</b> Lausanne · Luzern · Bellinzona · St. Gallen. <b>Cantonali:</b> Bäumleingasse (Strafgericht: Schützenmattstrasse). <b>Bürgergemeinde:</b> keine.</li>
+<li><b>Bürgergemeinde fa:</b> Einbürgerungen, Bürgerspital, Waisenhaus, Wald; sorveglia CMS e Zünfte.</li>
+<li><b>Date:</b> 1291 · 1356 · 1460 · 1471 · 1501 · 1833 · 1848 · 1971.</li>
+<li><b>Vogel Gryff:</b> Löwe (Rebhaus), Wilder Mann (Haeren), Vogel Gryff (Greifen).</li>
+</ol>
+<p>All'esame: respira, rispondi corto, e se non ricordi un dettaglio dillo con calma – è una conversazione, non un interrogatorio. <b>Viel Glück!</b></p>`}
+];
+
+const PERSONAL_QS = [
+  {q:"Seit wann leben Sie in der Schweiz / in Basel?", h:"Ich lebe seit … in …"},
+  {q:"Wo arbeiten Sie? Was machen Sie genau?", h:"Ich arbeite beim Kammerorchester Basel. Ich organisiere …"},
+  {q:"Warum möchten Sie Schweizer werden?", h:"Ich lebe seit vielen Jahren hier, ich fühle mich hier zu Hause und ich möchte auch abstimmen und wählen."},
+  {q:"Was gefällt Ihnen an Basel?", h:"2 cose concrete: il Reno, le Fähren, i musei, la Fasnacht, la musica …"},
+  {q:"Was machen Sie in der Freizeit?", h:"Ich spiele Fagott, …"},
+  {q:"Haben Sie Schweizer Freunde? Sind Sie in einem Verein?", h:"…"},
+  {q:"Wie informieren Sie sich über die Politik?", h:"giornale, radio, app, il materiale delle votazioni …"},
+  {q:"Welche Sprachen sprechen Sie?", h:"…"},
+  {q:"Was ist der Unterschied zwischen der Schweiz und Italien?", h:"per esempio: la democrazia diretta, si vota 4 volte all'anno"},
+  {q:"Was bedeutet für Sie das Schweizer Bürgerrecht?", h:"…"}
+];
+
+const SIM_QS = [
+  ["Was unterscheidet Basel von allen anderen Gemeinden?","Basel hat keine Einwohnergemeinde."],
+  ["Wie viele Ebenen hat die Schweiz?","Drei: Bund, Kanton, Gemeinde."],
+  ["Was ist die Gewaltenteilung?","Trennung von Legislative, Exekutive und Judikative."],
+  ["Wie heisst das Schweizer Parlament?","Bundesversammlung: Nationalrat und Ständerat."],
+  ["Wie viele Mitglieder haben Nationalrat und Ständerat?","200 und 46."],
+  ["Wie werden die Sitze im Nationalrat verteilt?","Nach der Bevölkerungszahl der Kantone (Proporz)."],
+  ["Wie viele Ständeräte hat ein Kanton?","Zwei; ein Halbkanton einen."],
+  ["Wer wählt das Bundesparlament? Wie oft?","Das Volk, alle 4 Jahre."],
+  ["Wie heisst die Regierung der Schweiz?","Bundesrat, 7 Mitglieder."],
+  ["Wer wählt den Bundesrat?","Die Vereinigte Bundesversammlung (246)."],
+  ["Was wählt die Vereinigte Bundesversammlung noch?","Bundespräsident, Bundesrichter, Bundeskanzler, General im Krieg."],
+  ["Wer ist Bundespräsident 2026?","Guy Parmelin (WBF)."],
+  ["Nennen Sie die 7 Bundesräte.","Parmelin, Cassis, Keller-Sutter, Rösti, Baume-Schneider, Jans, Pfister."],
+  ["Wer ist Bundeskanzler?","Viktor Rossi."],
+  ["Wo ist das Bundesgericht?","In Lausanne."],
+  ["Und die anderen Bundesgerichte?","Versicherung Luzern, Straf Bellinzona, Verwaltung St. Gallen."],
+  ["Wo tagen Regierung und Parlament?","Im Bundeshaus in Bern."],
+  ["Was ist eine Initiative?","Eine Verfassungs- oder Gesetzesänderung verlangen. 100'000 Unterschriften."],
+  ["Was ist ein Referendum?","Abstimmung über einen Parlamentsbeschluss verlangen. 50'000 Unterschriften."],
+  ["Was ist eine Petition?","Eine Bittschrift an eine Behörde; jede Person darf das."],
+  ["Ab wann darf man abstimmen?","Ab 18, mit Schweizer Bürgerrecht."],
+  ["Wie viele Unterschriften im Kanton?","Initiative 3'000, Referendum 2'000."],
+  ["Und in der Bürgergemeinde?","Initiative 2'000, Referendum 1'000."],
+  ["Welche Gemeinden hat Basel-Stadt?","Basel, Riehen, Bettingen."],
+  ["Wie heisst das Kantonsparlament?","Grosser Rat, 100 Mitglieder, im Rathaus."],
+  ["Wie heisst die Kantonsregierung? Wer wählt sie?","Regierungsrat, 7 Mitglieder, vom Volk, alle 4 Jahre."],
+  ["Wer ist Regierungspräsident?","Conradin Cramer."],
+  ["Nennen Sie die Regierungsräte.","Cramer, Keller, Atici, Soland, Engelberger, Eymann, Sutter."],
+  ["Welche kantonalen Gerichte gibt es?","Appellations-, Zivil-, Straf-, Sozialversicherungsgericht."],
+  ["Wer ist die Basler Ständerätin?","Eva Herzog."],
+  ["Wer sind die Basler Nationalräte?","Christ, Wyss, Arslan, von Falkenstein."],
+  ["An welche Länder und Kantone grenzt Basel-Stadt?","Deutschland, Frankreich, Basel-Landschaft."],
+  ["Welche Flüsse fliessen durch Basel?","Birs, Birsig, Wiese; alle in den Rhein."],
+  ["Wie heisst das Parlament der Bürgergemeinde?","Bürgergemeinderat, 40 Mitglieder, im Stadthaus, alle 6 Jahre."],
+  ["Wie heisst die Regierung der Bürgergemeinde? Wer wählt sie?","Bürgerrat, 7 Mitglieder, vom Bürgergemeinderat."],
+  ["Welche Aufgaben hat die Bürgergemeinde?","Einbürgerungen, Bürgerspital, Waisenhaus, Wald; Aufsicht über CMS und Zünfte."],
+  ["Was ist der Vogel Gryff?","Fest der 3 Kleinbasler Ehrengesellschaften im Januar: Löwe, Wilder Mann, Vogel Gryff."],
+  ["Welche ist die älteste Messe der Schweiz?","Die Basler Herbstmesse, seit 1471."],
+  ["Was geschah 1356 und 1460 in Basel?","Erdbeben; Gründung der Universität."],
+  ["1291, 1501, 1833, 1848, 1971?","Gründung Schweiz; Basel tritt bei; Kantonstrennung; Bundesverfassung; Frauenstimmrecht."]
+];
+
+/* ---------- Stato (localStorage + sync Supabase) ---------- */
+function loadPlan(){
+  try{
+    const p = JSON.parse(localStorage.getItem(PLAN_KEY)) || {};
+    return { done:p.done||{}, red:p.red||{}, personal:p.personal||{} };
+  } catch(e){ return { done:{}, red:{}, personal:{} }; }
+}
+function savePlan(p){ localStorage.setItem(PLAN_KEY, JSON.stringify(p)); queueCloudSync(); }
+function localDateStr(dt){
+  const d = dt || new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function fmtPlanDate(s){
+  const [y,m,d] = s.split("-").map(Number);
+  const dt = new Date(y, m-1, d);
+  const gg = ["Dom","Lun","Mar","Mer","Gio","Ven","Sab"][dt.getDay()];
+  return gg+" "+d+" ott";
+}
+function todayPlanIndex(){
+  const t = localDateStr();
+  if(t < PLAN_DAYS[0].d) return 0;
+  const i = PLAN_DAYS.findIndex(x=>x.d===t);
+  return i >= 0 ? i : -1; // -1 = dopo l'esame
+}
+function dayDone(p, d){ const x = p.done[d] || {}; return !!(x.am && x.pm); }
+function escHtml(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+/* ---------- Navigazione ---------- */
+function openPlan(){ switchTab("plan"); }
+function highlightPlanTab(){
+  document.querySelectorAll("nav.tabbar button").forEach(b=>b.classList.remove("active"));
+  const btn = document.querySelector('nav.tabbar button[data-view="plan"]');
+  if(btn) btn.classList.add("active");
+}
+let planSelectedIndex = null; // giorno mostrato in "Oggi" (null = oggi)
+
+/* ---------- Render piano ---------- */
+function renderPlan(){
+  const p = loadPlan();
+  const now = new Date();
+  const msDay = 86400000;
+  const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const exam0 = new Date(EXAM_DATE.getFullYear(), EXAM_DATE.getMonth(), EXAM_DATE.getDate());
+  const days = Math.round((exam0 - today0)/msDay);
+  const cd = document.getElementById("plan-countdown");
+  if(days > 1) cd.innerHTML = '<div class="num">'+days+'</div><div class="lbl">giorni all\'esame · ven 30 ottobre, ore 11:00</div>';
+  else if(days === 1) cd.innerHTML = '<div class="num">Domani</div><div class="lbl">ven 30 ottobre, ore 11:00 · leggi solo il Foglio finale</div>';
+  else if(days === 0) cd.innerHTML = '<div class="num">Oggi</div><div class="lbl">ore 11:00 · Viel Glück!</div>';
+  else cd.innerHTML = '<div class="num">🇨🇭</div><div class="lbl">L\'esame è passato.</div>';
+
+  // Oggi
+  const ti = todayPlanIndex();
+  const idx = planSelectedIndex !== null ? planSelectedIndex : (ti >= 0 ? ti : PLAN_DAYS.length-1);
+  const day = PLAN_DAYS[idx];
+  const st = p.done[day.d] || {};
+  const isToday = idx === ti;
+  let html = '<div class="card">';
+  html += '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">'
+       +  '<div style="font-weight:700; font-size:15px;">'+(isToday?"Oggi · ":"")+fmtPlanDate(day.d)+' · giorno '+(idx+1)+' di '+PLAN_DAYS.length+'</div>'
+       +  '<span class="plan-phase p'+day.f+'">'+PHASES[day.f]+'</span></div>';
+  html += '<div class="plan-task'+(st.am?" done":"")+'" onclick="togglePlanTask(\''+day.d+'\',\'am\')"><div class="plan-check">'+(st.am?"✓":"")+'</div><div><div class="plan-task-when">Mattina · 25 min</div><div class="plan-task-txt">'+escHtml(day.am)+'</div></div></div>';
+  html += '<div class="plan-task'+(st.pm?" done":"")+'" onclick="togglePlanTask(\''+day.d+'\',\'pm\')"><div class="plan-check">'+(st.pm?"✓":"")+'</div><div><div class="plan-task-when">Sera · 15 min</div><div class="plan-task-txt">'+escHtml(day.pm)+'</div></div></div>';
+  html += '<div class="plan-links">';
+  (day.books||[]).forEach(bid=>{
+    const b = BOOK.find(x=>x.id===bid);
+    if(b) html += '<button class="ghost" onclick="openBook(\''+bid+'\')">'+(b.n==="F"?"Foglio finale":"Blocco "+b.n)+'</button>';
+  });
+  const simLbl = {"1-20":"Simulazione 1–20","21-40":"Simulazione 21–40","all":"Simulazione completa","pers":"Domande personali"};
+  if(day.sim) html += '<button class="secondary" onclick="startSim(\''+day.sim+'\')">'+simLbl[day.sim]+'</button>';
+  if(day.sim2) html += '<button class="ghost" onclick="startSim(\''+day.sim2+'\')">'+simLbl[day.sim2]+'</button>';
+  if(day.red) html += '<button class="ghost" onclick="startSim(\'red\')">Carte rosse ('+Object.keys(p.red).length+')</button>';
+  html += '</div>';
+  if(planSelectedIndex !== null && planSelectedIndex !== ti){
+    html += '<button class="ghost" style="margin-top:12px;" onclick="selectPlanDay(null)">Torna a oggi</button>';
+  }
+  html += '</div>';
+  // giorni arretrati
+  const late = ti > 0 ? PLAN_DAYS.slice(0, ti).filter(x=>!dayDone(p, x.d)).length : 0;
+  if(late > 0 && isToday){
+    html += '<div class="card" style="font-size:13px; color:var(--amber); border-color:#5a4a1c;">'+late+' giorn'+(late===1?"o":"i")+' precedent'+(late===1?"e":"i")+' non completat'+(late===1?"o":"i")+'. Non recuperare tutto: fai oggi il blocco saltato e sposta il resto di un giorno.</div>';
+  }
+  document.getElementById("plan-today").innerHTML = html;
+
+  document.getElementById("plan-red-btn").textContent = "Carte rosse ("+Object.keys(p.red).length+")";
+
+  // Libro
+  document.getElementById("plan-book-list").innerHTML = BOOK.map(b=>
+    '<div class="book-row" onclick="openBook(\''+b.id+'\')"><span class="n">'+b.n+'</span><span class="t">'+escHtml(b.t)+'</span><span style="color:var(--text-dim);">›</span></div>'
+  ).join("");
+
+  // Tutti i giorni
+  document.getElementById("plan-all-days").innerHTML = PLAN_DAYS.map((x,i)=>{
+    const done = dayDone(p, x.d);
+    const part = !done && p.done[x.d] && (p.done[x.d].am || p.done[x.d].pm);
+    const isLate = ti >= 0 && i < ti && !done;
+    const cls = "plan-day-row"+(i===ti?" today":"")+(done?" ok":"")+(isLate?" late":"");
+    const s = done ? "✓" : (part ? "½" : (isLate ? "!" : "○"));
+    return '<div class="'+cls+'" onclick="selectPlanDay('+i+')"><span class="d">'+fmtPlanDate(x.d)+'</span><span class="t">'+escHtml(x.am)+'</span><span class="s">'+s+'</span></div>';
+  }).join("");
+}
+function selectPlanDay(i){
+  planSelectedIndex = (i === null || i === todayPlanIndex()) ? null : i;
+  renderPlan();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+function togglePlanTask(d, k){
+  const p = loadPlan();
+  p.done[d] = p.done[d] || {};
+  p.done[d][k] = !p.done[d][k];
+  savePlan(p);
+  renderPlan();
+}
+
+/* ---------- Libro ---------- */
+function openBook(id){
+  const i = BOOK.findIndex(b=>b.id===id);
+  if(i < 0) return;
+  switchTab("book");
+  highlightPlanTab();
+  const b = BOOK[i];
+  const el = document.getElementById("book-content");
+  if(b.html === "__PERSONAL__"){
+    const p = loadPlan();
+    let h = '<h2>Blocco 9 – Domande personali</h2>'
+      + '<p>Il colloquio è una conversazione: spesso inizia con domande su di te. Scrivi sotto ogni domanda <b>2–3 frasi semplici in tedesco</b>, vere e tue. Si salvano da sole e compaiono nella Simulazione «Personali».</p>';
+    PERSONAL_QS.forEach((x,k)=>{
+      h += '<p style="margin:14px 0 2px;"><b>'+(k+1)+'. '+escHtml(x.q)+'</b></p>'
+        +  '<textarea data-k="'+k+'" placeholder="'+escHtml(x.h)+'" oninput="savePersonal(this)">'+escHtml(p.personal[k]||"")+'</textarea>';
+    });
+    h += '<p>Se non capisci una domanda: <i>Können Sie die Frage bitte wiederholen?</i></p>';
+    el.innerHTML = h;
+  } else {
+    el.innerHTML = b.html;
+  }
+  const prev = document.getElementById("book-prev"), next = document.getElementById("book-next");
+  prev.disabled = i===0; next.disabled = i===BOOK.length-1;
+  prev.style.opacity = i===0 ? .4 : 1; next.style.opacity = i===BOOK.length-1 ? .4 : 1;
+  prev.onclick = ()=>{ if(i>0) openBook(BOOK[i-1].id); };
+  next.onclick = ()=>{ if(i<BOOK.length-1) openBook(BOOK[i+1].id); };
+  window.scrollTo(0,0);
+}
+let personalTimer = null;
+function savePersonal(ta){
+  clearTimeout(personalTimer);
+  personalTimer = setTimeout(()=>{
+    const p = loadPlan();
+    p.personal[ta.dataset.k] = ta.value;
+    savePlan(p);
+  }, 600);
+}
+
+/* ---------- Simulazione + carte rosse ---------- */
+let simQueue = [], simPos = 0, simShown = false, simOk = 0, simMode = "";
+function simItem(id){
+  if(id.startsWith("s")){ const n = parseInt(id.slice(1),10); const x = SIM_QS[n-1]; return {q:x[0], a:x[1], label:"Domanda "+n}; }
+  const k = parseInt(id.slice(1),10); const p = loadPlan();
+  const a = (p.personal[k]||"").trim();
+  return {q:PERSONAL_QS[k].q, a: a || "(Non hai ancora scritto la risposta: aprila nel Blocco 9.)", label:"Personale "+(k+1)};
+}
+function startSim(mode){
+  simMode = mode;
+  const p = loadPlan();
+  if(mode==="1-20") simQueue = Array.from({length:20},(_,i)=>"s"+(i+1));
+  else if(mode==="21-40") simQueue = Array.from({length:20},(_,i)=>"s"+(i+21));
+  else if(mode==="all") simQueue = Array.from({length:40},(_,i)=>"s"+(i+1));
+  else if(mode==="pers") simQueue = PERSONAL_QS.map((_,k)=>"p"+k);
+  else simQueue = shuffle(Object.keys(p.red));
+  simPos = 0; simOk = 0; simShown = false;
+  switchTab("sim");
+  highlightPlanTab();
+  showSim();
+}
+function showSim(){
+  const card = document.getElementById("sim-card");
+  const bar = document.getElementById("sim-progress-bar");
+  if(simQueue.length === 0){
+    bar.style.width = "0%";
+    card.innerHTML = '<div class="empty">Nessuna carta rossa: ottimo!<br>Le risposte che non sai nella Simulazione finiscono qui.</div>';
+    return;
+  }
+  if(simPos >= simQueue.length){
+    bar.style.width = "100%";
+    const p = loadPlan();
+    const nRed = Object.keys(p.red).length;
+    card.innerHTML = '<div class="result-big"><div class="pct">'+simOk+' / '+simQueue.length+'</div><div class="lbl">risposte sapute</div></div>'
+      + '<p style="text-align:center; color:var(--text-dim); font-size:13px;">Carte rosse da ripassare: '+nRed+'</p>'
+      + (nRed ? '<button class="secondary" onclick="startSim(\'red\')">Ripassa le carte rosse</button>' : '')
+      + '<button class="ghost" style="margin-top:10px;" onclick="startSim(\''+simMode+'\')">Ricomincia</button>'
+      + '<button class="ghost" style="margin-top:10px;" onclick="openPlan()">Torna al piano</button>';
+    return;
+  }
+  bar.style.width = (simPos/simQueue.length*100)+"%";
+  const id = simQueue[simPos];
+  const it = simItem(id);
+  const p = loadPlan();
+  const redInfo = (id in p.red) ? ' · <span style="color:#ff8a80;">carta rossa '+p.red[id]+'/3</span>' : '';
+  let h = '<div class="sim-meta"><span>'+it.label+redInfo+'</span><span>'+(simPos+1)+' / '+simQueue.length+'</span></div>'
+        + '<div class="sim-q">'+escHtml(it.q)+'</div>';
+  if(!simShown){
+    h += '<div style="color:var(--text-dim); font-size:13px; margin-bottom:12px;">Rispondi ad alta voce in tedesco, poi guarda.</div>'
+      +  '<button class="primary" onclick="simReveal()">Mostra risposta</button>';
+  } else {
+    h += '<div class="sim-a">'+escHtml(it.a)+'</div>'
+      +  '<div class="fc-actions" style="grid-template-columns:1fr 1fr;"><button class="again" onclick="simRate(false)">Non la sapevo</button><button class="good" onclick="simRate(true)">La sapevo</button></div>';
+  }
+  card.innerHTML = h;
+}
+function simReveal(){ simShown = true; showSim(); }
+function simRate(ok){
+  const id = simQueue[simPos];
+  const p = loadPlan();
+  if(ok){
+    simOk++;
+    if(id in p.red){
+      p.red[id] = (p.red[id]||0) + 1;
+      if(p.red[id] >= 3) delete p.red[id];
+    }
+  } else {
+    p.red[id] = 0;
+  }
+  savePlan(p);
+  simPos++; simShown = false;
+  showSim();
+}
+
+/* =========================================================
+   SUPABASE
+   ========================================================= */
 const SUPABASE_URL = "https://edlvmkjctzhqoswpppds.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVkbHZta2pjdHpocW9zd3BwcGRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNjEyMDEsImV4cCI6MjA5NjczNzIwMX0.Oq0TyYWG4LotZhH57LQtklUdVho_kQ15KlSs8KGO2AM";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -2308,7 +3059,8 @@ function collectProgressData(){
     results: loadResults(),
     spellScope: loadSpellScope(),
     spellStats: loadSpellStats(),
-    deleted: loadDeleted()
+    deleted: loadDeleted(),
+    plan: loadPlan()
   };
 }
 function applyProgressData(d){
@@ -2320,6 +3072,7 @@ function applyProgressData(d){
   if(d.spellScope) localStorage.setItem(SPELL_SCOPE_KEY, d.spellScope);
   if(d.spellStats) localStorage.setItem(SPELL_STATS_KEY, JSON.stringify(d.spellStats));
   if(d.deleted) localStorage.setItem(DELETED_KEY, JSON.stringify(d.deleted));
+  if(d.plan) localStorage.setItem(PLAN_KEY, JSON.stringify(d.plan));
 }
 
 function queueCloudSync(){
@@ -2347,6 +3100,7 @@ async function pullProgressFromCloud(){
     applyProgressData(data.data);
     localStorage.setItem(LAST_SYNC_KEY, data.updated_at);
     renderHome(); // ricarica la vista con i dati sincronizzati
+    if(document.getElementById("view-plan").classList.contains("active")) renderPlan();
   }
 }
 
