@@ -361,9 +361,10 @@
       <div class="grid2">
         <button class="ghost" onclick="startSim('1-20')">Domande 1–20</button>
         <button class="ghost" onclick="startSim('21-40')">Domande 21–40</button>
-        <button class="ghost" onclick="startSim('all')">Tutte le 40</button>
+        <button class="ghost" onclick="startSim('lib')">Libretto 41–57</button>
         <button class="ghost" onclick="startSim('pers')">Personali</button>
       </div>
+      <button class="ghost" style="margin-top:10px;" onclick="startSim('all')">Tutte le domande (1–57)</button>
       <button class="secondary" style="margin-top:10px;" id="plan-red-btn" onclick="startSim('red')">Carte rosse (0)</button>
     </div>
     <h2 class="section-title">Il libro di studio</h2>
@@ -2432,9 +2433,9 @@ const PLAN_DAYS = [
   {d:"2026-10-23", f:2, am:"Simulazione 1: domande 1–20 a voce, in tedesco", pm:"Rileggi solo le risposte sbagliate (carte rosse)", sim:"1-20", red:true},
   {d:"2026-10-24", f:2, am:"Solo punti deboli + mappa mentale", pm:"Carte rosse", red:true},
   {d:"2026-10-25", f:2, am:"Simulazione 2: domande 21–40 + personali", pm:"Carte rosse", sim:"21-40", sim2:"pers", red:true},
-  {d:"2026-10-26", f:3, am:"Tutti i nomi a memoria: 7 Bundesräte, 7 Regierungsräte, 5 parlamentari BS. Controlla su admin.ch e bs.ch che non siano cambiati", pm:"Carte rosse", books:["b2","b4"], red:true},
-  {d:"2026-10-27", f:3, am:"Simulazione 3 completa: tutte le domande (30 min)", pm:"Rileggi le sbagliate (carte rosse)", sim:"all", sim2:"pers", red:true},
-  {d:"2026-10-28", f:3, am:"Pagina bianca finale: scheletro + numeri + nomi", pm:"Carte rosse", books:["b1","finale"], red:true},
+  {d:"2026-10-26", f:3, am:"Riquadri «Dal libretto ufficiale» (Blocchi 1–8) + tutti i nomi a memoria: 7 Bundesräte, 7 Regierungsräte, 5 parlamentari BS. Controlla su admin.ch e bs.ch che non siano cambiati", pm:"Domande 41–57 (libretto) + carte rosse", books:["b1","b2","b3","b4","b5","b7","b8"], sim:"lib", red:true},
+  {d:"2026-10-27", f:3, am:"Simulazione 3 completa: tutte le 57 domande (40 min)", pm:"Rileggi le sbagliate (carte rosse)", sim:"all", sim2:"pers", red:true},
+  {d:"2026-10-28", f:3, am:"Blocco 10 Glossar + pagina bianca finale: scheletro + numeri + nomi", pm:"Carte rosse", books:["b10","b1","finale"], red:true},
   {d:"2026-10-29", f:3, am:"Solo il Foglio finale, 2 volte. Niente di nuovo", pm:"A letto presto", books:["finale"]},
   {d:"2026-10-30", f:3, am:"Ore 9: Foglio finale una volta, con calma", pm:"Ore 11: ESAME – Viel Glück!", books:["finale"]}
 ];
@@ -2453,7 +2454,7 @@ const BOOK = [
 <li><b>Carte rosse.</b> Nella Simulazione, ogni risposta che non sai diventa carta rossa. Esce dalle rosse solo dopo 3 risposte giuste di fila.</li>
 <li><b>Trucchi e immagini.</b> Più l'immagine è buffa, più resta. Dormire bene è parte dello studio.</li>
 </ol>
-<p>★ = dai fogli di Carlos (obbligatorio) · ☆ = extra, solo se avanza tempo.</p>`},
+<p>★ = dal libretto ufficiale della Bürgergemeinde o dai fogli di Carlos (obbligatorio) · ☆ = extra, solo se avanza tempo.</p>`},
 
 {id:"b1", n:"1", t:"Lo scheletro: i 3 livelli", html:`
 <h2>Blocco 1 – Lo scheletro: i 3 livelli</h2>
@@ -2467,7 +2468,7 @@ const BOOK = [
 <tr><td>gewählt von</td><td><b>Vereinigte Bundesversammlung</b> (246)</td><td><b>Volk</b></td><td><b>Bürgergemeinderat</b></td></tr>
 <tr><td>alle … Jahre</td><td>4</td><td>4</td><td>6</td></tr>
 <tr><td>Wahlen</td><td>2023, 2027</td><td>2024, 2028</td><td>2023, 2029</td></tr>
-<tr><td><b>Gerichte</b></td><td>4 Bundesgerichte</td><td>4 kantonale</td><td><b>keine</b></td></tr>
+<tr><td><b>Gerichte</b></td><td>4 Bundesgerichte</td><td>1. Instanz: Zivil-, Straf-, Sozialversicherungsgericht · höchste: Appellationsgericht</td><td><b>keine</b></td></tr>
 <tr><td>Initiative</td><td>100'000</td><td>3'000</td><td>2'000</td></tr>
 <tr><td>Referendum</td><td>50'000</td><td>2'000</td><td>1'000</td></tr>
 </table></div>
@@ -2477,6 +2478,7 @@ const BOOK = [
 <li><b>Anni: 4 – 4 – 6.</b> Solo la Bürgergemeinde vota ogni 6 anni.</li>
 <li>«<b>Il popolo elegge il governo solo nel Cantone.</b>» Nel Bund e nella Bürgergemeinde è il parlamento che elegge il governo.</li>
 <li><b>Tribunali:</b> 4 – 4 – zero.</li></ul></div>
+<div class="trick" style="background:#12233a; border-color:#1f3f6a;"><b class="h" style="color:#5aa9ff;">Dal libretto ufficiale ★</b><ul><li>La Svizzera è un <b>demokratischer Bundesstaat</b> con <b>direkte Demokratie</b>: il popolo decide direttamente.</li><li>Il libretto dice <b>Gewaltentrennung</b> (Carlos: Gewaltenteilung, stessa cosa). Legislative = <b>Parlament</b> (Gesetzgebung) · Exekutive = <b>Regierung</b> (Ausführung) · Judikative = <b>Gerichte</b> (Rechtsprechung).</li><li>Solo il <b>Regierungsrat</b> è <b>vollamtlich</b> (a tempo pieno). <b>Grosser Rat, Bürgergemeinderat e Bürgerrat</b> sono <b>nebenamtlich</b> (accanto a un altro lavoro).</li><li><i>Die Schweiz ist ein demokratischer Bundesstaat mit direkter Demokratie.</i></li></ul></div>
 <div class="de"><b class="h">Dillo in tedesco</b><ul>
 <li>Die Schweiz hat drei Ebenen: den Bund, die Kantone und die Gemeinden.</li>
 <li>Es gibt eine klare Gewaltenteilung: Legislative, Exekutive und Judikative.</li>
@@ -2501,6 +2503,8 @@ const BOOK = [
 <tr><td>Bundesverwaltungsgericht</td><td>St. Gallen</td><td>San Gallo = gli uffici</td></tr>
 </table></div>
 <p>I giudici federali li elegge la Vereinigte Bundesversammlung.</p>
+<div class="trick" style="background:#12233a; border-color:#1f3f6a;"><b class="h" style="color:#5aa9ff;">Dal libretto ufficiale ★</b><ul><li>Il <b>Bundesgericht</b> ha la <b>sede principale (Hauptsitz) a Lausanne</b>; Luzern, St. Gallen e Bellinzona sono <b>sezioni staccate</b> (dezentrale Abteilungen).</li><li>Il Ständerat è <b>eletto dal popolo</b>: 2 membri per <b>Vollkanton</b>, 1 per <b>Halbkanton</b>.</li><li>Il Bundesrat è «7-köpfig» e ci sono <b>7 Departemente</b>.</li></ul></div>
+
 <h3>Parte B – Der Bundesrat ★</h3>
 <p>Governo (Exekutive): <b>Bundesrat, 7 membri</b>, eletti dalla Vereinigte Bundesversammlung <b>ogni 4 anni</b>. Partiti: 2 SVP, 2 FDP, 2 SP, 1 Mitte.</p>
 <div class="tbl"><table>
@@ -2539,6 +2543,7 @@ const BOOK = [
 <li>Nel Bund il Referendum è la <b>metà</b>: 100'000 → 50'000.</li>
 <li>Sotto il Bund, le migliaia in fila: <b>3 – 2 – 2 – 1</b>.</li>
 <li>L'Initiative chiede sempre più firme del Referendum.</li></ul></div>
+<div class="trick" style="background:#12233a; border-color:#1f3f6a;"><b class="h" style="color:#5aa9ff;">Dal libretto ufficiale ★</b><ul><li><b>Direkte Demokratie:</b> 4 diritti – <b>aktives und passives Wahlrecht</b> · <b>Stimmrecht zu Initiativen</b> · <b>Stimmrecht zu Referenden</b> · <b>Petitionsrecht</b>.</li><li><b>Wahlrecht:</b> attivo = eleggere i candidati; passivo = farsi eleggere in un ufficio (Legislative, Exekutive o Judikative).</li><li><b>Stimmrecht:</b> votare su modifiche della <b>Costituzione</b>, delle <b>leggi</b> e su <b>trattati internazionali (Staatsverträge)</b>. Condizioni: 18 anni e cittadinanza svizzera.</li><li>Firme: Initiative Bund 100'000 / Kanton BS 3'000 · Referendum Bund 50'000 / Kanton BS 2'000.</li><li><i>Aktives Wahlrecht heisst wählen, passives Wahlrecht heisst sich wählen lassen.</i></li></ul></div>
 <div class="de"><b class="h">Dillo in tedesco</b><ul>
 <li>Mit einer Initiative verlangen die Stimmbürger eine Verfassungsänderung. Im Bund braucht es 100'000 Unterschriften.</li>
 <li>Mit einem Referendum stimmt das Volk über einen Beschluss des Parlaments ab. Im Bund braucht es 50'000 Unterschriften.</li>
@@ -2548,7 +2553,7 @@ const BOOK = [
 {id:"b4", n:"4", t:"Der Kanton Basel-Stadt", html:`
 <h2>Blocco 4 – Der Kanton Basel-Stadt (2. Ebene)</h2>
 <h3>Parte A – Dati e politica ★</h3>
-<p>Basel-Stadt è <b>uno dei 26 cantoni</b>; 6 cantoni hanno un solo seggio al Ständerat, BS è uno di questi. <b>3 comuni: Basel, Riehen, Bettingen</b>. Abitanti (2023): <b>200'000</b>, <b>33% stranieri da 166 Paesi</b>. ☆ Il cantone più piccolo: 37 km².</p>
+<p>Basel-Stadt è <b>uno dei 26 cantoni</b>; 6 cantoni hanno un solo seggio al Ständerat, BS è uno di questi. <b>3 comuni: Basel, Riehen, Bettingen</b>. Abitanti: <b>ca. 206'100</b> (Stadt Basel ca. 182'400 · Riehen ca. 22'500 · Bettingen ca. 1'200), <b>33% stranieri da 166 Paesi</b>. ★ Superficie <b>37 km²</b> (il cantone più piccolo), lingua ufficiale Deutsch.</p>
 <ul>
 <li><b>Grosser Rat</b> – <b>100 membri</b> (Grossrätinnen und Grossräte), si riunisce nel <b>Rathaus</b>. Eletto dal <b>popolo</b> ogni <b>4 anni</b>.</li>
 <li><b>Regierungsrat</b> – <b>7 membri</b>, eletti dal <b>popolo</b> ogni <b>4 anni</b> (2024, 2028). Il <b>Regierungspräsident</b> è eletto <b>separatamente</b>.</li>
@@ -2584,6 +2589,7 @@ const BOOK = [
 <li>Nordwestschweiz: Basel-Stadt, Basel-Landschaft, Aargau, Solothurn, (Jura).</li>
 <li>Fiumi: <b>Birs</b> (Laufental), <b>Birsig</b> (Leimental/Birsigtal), <b>Wiese</b> (Wiesental, D) → tutti nel <b>Rhein</b>.</li>
 </ul>
+<div class="trick" style="background:#12233a; border-color:#1f3f6a;"><b class="h" style="color:#5aa9ff;">Dal libretto ufficiale ★</b><ul><li><b>Basilea è la 3ª città della Svizzera</b>, dopo Zürich e Genf. Si trova nel <b>Dreiländereck</b> Schweiz–Deutschland–Frankreich e forma il Cantone con i due <b>Landgemeinden</b> Riehen e Bettingen.</li><li><b>Grosser Rat:</b> 100 membri <b>nebenamtlich</b>. È il parlamento del <b>Cantone e anche della città di Basilea</b>; rappresenta «die oberste Gewalt: das Volk».</li><li><b>Regierungsrat:</b> 7 membri <b>vollamtlich</b>, «die oberste leitende und vollziehende Behörde». Ognuno guida un Departement.</li><li><b>Tribunali in due livelli:</b> 1ª istanza = <b>Zivil-, Straf-, Sozialversicherungsgericht</b>; istanza più alta del Cantone = <b>Appellationsgericht</b>.</li><li><i>Basel ist nach Zürich und Genf die drittgrösste Stadt der Schweiz.</i></li><li><i>Das Appellationsgericht ist die höchste Instanz im Kanton.</i></li></ul></div>
 <div class="de"><b class="h">Dillo in tedesco</b><ul>
 <li>Der Kanton Basel-Stadt hat drei Gemeinden: Basel, Riehen und Bettingen.</li>
 <li>Das Parlament ist der Grosse Rat mit 100 Mitgliedern. Er tagt im Rathaus.</li>
@@ -2608,6 +2614,7 @@ const BOOK = [
 <li><b>Sorveglia</b> le <b>Zünfte und Gesellschaften</b>.</li>
 </ol>
 <div class="trick"><b class="h">Immagine per ricordare</b><p>Un <b>ospedale</b> (anziani), un <b>orfanotrofio</b> (bambini), un <b>ufficio</b> con un bosco dietro (naturalizzazioni e foreste); sopra, due guardiani che controllano <b>la fondazione Merian</b> e <b>le corporazioni</b>.</p></div>
+<div class="trick" style="background:#12233a; border-color:#1f3f6a;"><b class="h" style="color:#5aa9ff;">Dal libretto ufficiale ★</b><ul><li><b>Regola generale:</b> ogni comune è formato da <b>Einwohnergemeinde</b> e <b>Bürgergemeinde</b>. <b>Nella città di Basilea i compiti dell'Einwohnergemeinde li fanno le autorità del Cantone</b>: per questo Basilea «non ha un'Einwohnergemeinde».</li><li><b>Knapp 54'000</b> Basler Bürger <b>che abitano in città</b>.</li><li><b>Bürgergemeinderat:</b> 40 membri <b>nebenamtlich</b>, eletti dai Basler Bürger con diritto di voto che abitano in città, ogni 6 anni. <b>Bürgerrat:</b> 7 membri <b>nebenamtlich</b>, eletti dal Bürgergemeinderat, ogni 6 anni. «Kein Gericht auf Gemeindeebene.»</li><li>È un «<b>modernes Dienstleistungsunternehmen</b>»: compiti <b>sociali e di utilità pubblica</b> (gemeinnützig) per i cittadini di Basilea <b>e per tutti gli abitanti</b>.</li><li><b>I 6 compiti:</b> 1. <b>Einbürgerungen</b> · 2. <b>Zentrale Dienste</b> – servizi per la politica (<b>Bürgerratskanzlei</b>) e per i cittadini + Forstverwaltung (<b>Hardwald</b>) · 3. <b>BSB Bürgerspital</b> – anziani (<b>Pflegeheime</b>) e persone con disabilità · 4. <b>Bürgerliches Waisenhaus</b> – Kinder- und Jugendheim e aiuti alle famiglie · 5. <b>Aufsicht über die Christoph Merian Stiftung</b> · 6. <b>Aufsicht über E. Zünfte und E. Gesellschaften</b>.</li><li><i>In der Stadt Basel übernehmen die Behörden des Kantons die Aufgaben der Einwohnergemeinde.</i></li><li><i>Die Bürgergemeinde ist ein modernes Dienstleistungsunternehmen mit sozialen und gemeinnützigen Aufgaben.</i></li></ul></div>
 <div class="de"><b class="h">Dillo in tedesco</b><ul>
 <li>Basel hat keine Einwohnergemeinde. Darum ist die Bürgergemeinde die dritte Ebene.</li>
 <li>Das Parlament ist der Bürgergemeinderat mit 40 Mitgliedern, die Regierung ist der Bürgerrat mit 7 Mitgliedern.</li>
@@ -2649,8 +2656,8 @@ const BOOK = [
 <h2>Blocco 7 – Die Schweiz: Allgemeines und Geographie</h2>
 <h3>Dati generali ★</h3>
 <ul>
-<li>Abitanti: <b>9 milioni</b> (2022: circa <b>2,25 milioni stranieri</b>).</li>
-<li>Superficie: <b>41'300 km²</b>.</li>
+<li>Abitanti: <b>ca. 8,9 milioni</b> (2022: circa <b>2,25 milioni stranieri</b>).</li>
+<li>Superficie: <b>41'285 km²</b> (circa 41 mila).</li>
 <li>Confini: <b>Deutschland</b> (nord), <b>Frankreich</b> (ovest), <b>Italien</b> (sud), <b>Österreich</b> (est), <b>Liechtenstein</b> (principato, est).</li>
 <li>Lingue: <b>Deutsch, Französisch, Italienisch, Rätoromanisch</b>.</li>
 <li>Capitale: <b>Bundesstadt Bern</b>, <b>Bundeshaus</b>.</li>
@@ -2684,8 +2691,8 @@ const BOOK = [
 <h3>La mappa: 26 cantoni ★</h3>
 <div class="tbl"><table>
 <tr><th>Sigla</th><th>Kanton</th><th>Hauptort</th></tr>
-<tr><td><b>BS</b></td><td><b>Basel-Stadt</b></td><td><b>Basel</b></td></tr>
-<tr><td><b>BL</b></td><td><b>Basel-Landschaft</b></td><td><b>Liestal</b></td></tr>
+<tr><td><b>BS</b></td><td><b>Basel-Stadt</b> · Halbkanton</td><td><b>Basel</b></td></tr>
+<tr><td><b>BL</b></td><td><b>Basel-Landschaft</b> · Halbkanton</td><td><b>Liestal</b></td></tr>
 <tr><td><b>AG</b></td><td><b>Aargau</b></td><td><b>Aarau</b></td></tr>
 <tr><td><b>SO</b></td><td><b>Solothurn</b></td><td><b>Solothurn</b></td></tr>
 <tr><td><b>JU</b></td><td><b>Jura</b></td><td><b>Delémont</b></td></tr>
@@ -2694,26 +2701,27 @@ const BOOK = [
 <tr><td>LU</td><td>Luzern</td><td>Luzern</td></tr>
 <tr><td>UR</td><td>Uri</td><td>Altdorf</td></tr>
 <tr><td>SZ</td><td>Schwyz</td><td>Schwyz</td></tr>
-<tr><td>OW</td><td>Obwalden</td><td>Sarnen</td></tr>
-<tr><td>NW</td><td>Nidwalden</td><td>Stans</td></tr>
+<tr><td>OW</td><td>Obwalden · Halbkanton</td><td>Sarnen</td></tr>
+<tr><td>NW</td><td>Nidwalden · Halbkanton</td><td>Stans</td></tr>
 <tr><td>GL</td><td>Glarus</td><td>Glarus</td></tr>
 <tr><td>ZG</td><td>Zug</td><td>Zug</td></tr>
-<tr><td>FR</td><td>Fribourg</td><td>Fribourg</td></tr>
+<tr><td>FR</td><td>Freiburg (Fribourg)</td><td>Fribourg</td></tr>
 <tr><td>SH</td><td>Schaffhausen</td><td>Schaffhausen</td></tr>
-<tr><td>AR</td><td>Appenzell Ausserrhoden</td><td>Herisau</td></tr>
-<tr><td>AI</td><td>Appenzell Innerrhoden</td><td>Appenzell</td></tr>
+<tr><td>AR</td><td>Appenzell Ausserrhoden · Halbkanton</td><td>Herisau</td></tr>
+<tr><td>AI</td><td>Appenzell Innerrhoden · Halbkanton</td><td>Appenzell</td></tr>
 <tr><td>SG</td><td>St. Gallen</td><td>St. Gallen</td></tr>
 <tr><td>GR</td><td>Graubünden</td><td>Chur</td></tr>
 <tr><td>TG</td><td>Thurgau</td><td>Frauenfeld</td></tr>
-<tr><td>TI</td><td>Ticino</td><td>Bellinzona</td></tr>
-<tr><td>VD</td><td>Vaud</td><td>Lausanne</td></tr>
-<tr><td>VS</td><td>Valais / Wallis</td><td>Sion</td></tr>
-<tr><td>NE</td><td>Neuchâtel</td><td>Neuchâtel</td></tr>
-<tr><td>GE</td><td>Genève</td><td>Genève</td></tr>
+<tr><td>TI</td><td>Tessin (Ticino)</td><td>Bellinzona</td></tr>
+<tr><td>VD</td><td>Waadt (Vaud)</td><td>Lausanne</td></tr>
+<tr><td>VS</td><td>Wallis (Valais)</td><td>Sion</td></tr>
+<tr><td>NE</td><td>Neuenburg (Neuchâtel)</td><td>Neuchâtel</td></tr>
+<tr><td>GE</td><td>Genf (Genève)</td><td>Genève</td></tr>
 </table></div>
 <p>Altre città sulla mappa: Olten (SO), Laufen (BL). Da riconoscere: fiumi Aare, Limmat, Thur, Inn, Doubs, Birs, Saane, Simme, Kander, Moesa, Maira, Poschiavino; laghi Lac de Neuchâtel, Bielersee, Murtensee, Hallwilersee, Sempachersee, Baldeggersee, Zugersee, Zürichsee, Walensee, Sarnersee, Lungerersee, Lauerzersee, Ägerisee, Lago di Lugano.</p>
+<div class="trick" style="background:#12233a; border-color:#1f3f6a;"><b class="h" style="color:#5aa9ff;">Dal libretto ufficiale ★</b><ul><li>Nome ufficiale: <b>Schweizerische Eidgenossenschaft</b> – <i>Confoederatio Helvetica</i>, sigla <b>CH</b>. <b>Bundesstadt = Hauptstadt: Bern.</b></li><li>La Svizzera è <b>al centro dell'Europa centrale</b> (im Zentrum von Mitteleuropa) e <b>non fa parte dell'UE</b> (nicht Mitglied der EU).</li><li><b>Amtssprachen</b> (lingue ufficiali): Deutsch, Französisch, Italienisch, Rätoromanisch. <b>Dove:</b> tedesco a nord e al centro · francese a ovest · italiano a sud (Tessin) · romancio a est (Graubünden).</li><li><b>26 cantoni = 20 Vollkantone + 6 Halbkantone.</b> Halbkantone: <b>BS, BL, AR, AI, NW, OW</b>. Trucco: <b>3 coppie</b> – le due Basilea, i due Appenzell, Nid- e Obwalden.</li><li><b>Ogni cantone è formato da più Gemeinden.</b></li><li>Nel libretto i cantoni hanno i <b>nomi tedeschi</b>: Freiburg, Genf, Neuenburg, Tessin, Waadt, Wallis.</li><li><i>Die Schweiz liegt im Zentrum von Mitteleuropa und ist nicht Mitglied der EU.</i></li><li><i>Die Schweiz hat 26 Kantone: 20 Vollkantone und 6 Halbkantone.</i></li></ul></div>
 <div class="de"><b class="h">Dillo in tedesco</b><ul>
-<li>Die Schweiz hat etwa 9 Millionen Einwohner und ist 41'300 Quadratkilometer gross.</li>
+<li>Die Schweiz hat etwa 8,9 Millionen Einwohner und ist 41'285 Quadratkilometer gross.</li>
 <li>Die Nachbarländer sind Deutschland, Frankreich, Italien, Österreich und Liechtenstein.</li>
 <li>Die Landessprachen sind Deutsch, Französisch, Italienisch und Rätoromanisch.</li>
 <li>Der grösste See ganz in der Schweiz ist der Neuenburgersee.</li></ul></div>`},
@@ -2735,9 +2743,30 @@ const BOOK = [
 <li><b>1833 → 1848</b>: prima Basilea si <b>divide</b>, 15 anni dopo la Svizzera si <b>unisce</b>.</li>
 <li><b>1971</b>: le donne votano da poco più di 50 anni. ☆ A Basel-Stadt dal 1966.</li></ul></div>
 <p><b>Date di Basilea ★</b>: 1225/26 Mittlere Rheinbrücke · 1356 Erdbeben · 1460 Universität · 1471 Herbstmesse.</p>
+<div class="trick" style="background:#12233a; border-color:#1f3f6a;"><b class="h" style="color:#5aa9ff;">Dal libretto ufficiale ★</b><ul><li><b>Svizzera:</b> <b>1291</b> alleanza di Uri, Schwyz, Unterwalden; <b>Rütlischwur del 1° agosto = Nationalfeiertag</b> · <b>fino al 1815</b> la Confederazione si allarga fino al <b>territorio di oggi</b> · <b>1848</b> prima Bundesverfassung · <b>1971</b> Frauenstimmrecht <b>a livello federale</b>.</li><li><b>Basilea:</b> Kelten (prima di Cristo) → Römer → <b>1225/1226</b> la <b>prima</b> Rheinbrücke (Mittlere Brücke) → <b>1356</b> Erdbeben → <b>1460</b> Universität → <b>1501</b> Beitritt → <b>1833</b> Trennung in <b>2 Halbkantone</b>.</li><li><i>Bis 1815 wurde die Eidgenossenschaft auf das heutige Gebiet erweitert.</i></li><li><i>Der 1. August ist der Nationalfeiertag.</i></li></ul></div>
+
 <p>☆ Extra: 1315 Morgarten · 1499 Pace di Basilea · 1515 Marignano (neutralità) · 1815 Congresso di Vienna · 1847 Sonderbundskrieg · 1979 Canton Giura · 2002 ONU.</p>`},
 
 {id:"b9", n:"9", t:"Domande personali (scrivi le tue risposte)", html:"__PERSONAL__"},
+
+{id:"b10", n:"10", t:"Glossar (dal libretto ufficiale)", html:`
+<h2>Blocco 10 – Glossar (dal libretto ufficiale) ★</h2>
+<p>Le definizioni del libretto. Leggile ad alta voce in tedesco: sono le parole che usa la commissione.</p>
+<p style="margin:0 0 12px;"><b>Bundesstaat</b><br>Ein aus mehreren Gliedstaaten (Kantone) zusammengesetzter Gesamtstaat<br><span style="color:var(--text-dim); font-size:13.5px;">Stato fatto di più stati membri (i cantoni)</span></p>
+<p style="margin:0 0 12px;"><b>Bürger/-in</b><br>Angehörigkeit zu einem Gemeinwesen, z. B. Basler Bürger als Angehöriger der Bürgergemeinde<br><span style="color:var(--text-dim); font-size:13.5px;">Chi appartiene a una comunità, es. alla Bürgergemeinde</span></p>
+<p style="margin:0 0 12px;"><b>Demokratie</b><br>Staatsform, bei der die Macht primär beim Volk liegt; das Volk kann Initiativen und Referenden auslösen, wählen und abstimmen<br><span style="color:var(--text-dim); font-size:13.5px;">Il potere è del popolo</span></p>
+<p style="margin:0 0 12px;"><b>Einbürgerung</b><br>Amtliches Verfahren, mit dem man das Basler Bürgerrecht / die Schweizer Staatsangehörigkeit erlangt<br><span style="color:var(--text-dim); font-size:13.5px;">La naturalizzazione</span></p>
+<p style="margin:0 0 12px;"><b>Exekutive</b><br>Ausführende Gewalt (Regierung)<br><span style="color:var(--text-dim); font-size:13.5px;">Il potere che esegue: il governo</span></p>
+<p style="margin:0 0 12px;"><b>Gemeinde</b><br>Gesamtheit der Mitglieder eines Gemeinwesens, z. B. die Bürgergemeinde der Stadt Basel<br><span style="color:var(--text-dim); font-size:13.5px;">Il comune / la comunità</span></p>
+<p style="margin:0 0 12px;"><b>Initiative</b><br>Recht, eine Verfassungsänderung zu verlangen; Bund 100'000, Kanton BS 3'000 Unterschriften<br><span style="color:var(--text-dim); font-size:13.5px;">Proposta nuova del popolo</span></p>
+<p style="margin:0 0 12px;"><b>Judikative</b><br>Rechtsprechende Gewalt (Gerichte)<br><span style="color:var(--text-dim); font-size:13.5px;">Il potere che giudica: i tribunali</span></p>
+<p style="margin:0 0 12px;"><b>Kanton</b><br>Gliedstaat der Schweiz; früher «Stand», daher «Ständerat»<br><span style="color:var(--text-dim); font-size:13.5px;">Cantone; prima si chiamava «Stand»</span></p>
+<p style="margin:0 0 12px;"><b>Legislative</b><br>Gesetzgebende Gewalt (Parlament)<br><span style="color:var(--text-dim); font-size:13.5px;">Il potere che fa le leggi</span></p>
+<p style="margin:0 0 12px;"><b>Parlament</b><br>Versammlung der vom Volk gewählten Vertreter im Bund, Kanton oder in der Gemeinde<br><span style="color:var(--text-dim); font-size:13.5px;">L'assemblea eletta dal popolo</span></p>
+<p style="margin:0 0 12px;"><b>Referendum</b><br>Recht, ein vom Parlament beschlossenes Gesetz vors Volk zu bringen; Bund 50'000, Kanton BS 2'000 Unterschriften<br><span style="color:var(--text-dim); font-size:13.5px;">Votare su una legge già decisa</span></p>
+<p style="margin:0 0 12px;"><b>Stimmrecht</b><br>Abstimmen über Verfassungsänderungen, Gesetzesänderungen und Staatsverträge (18 Jahre, Schweizer Staatsangehörigkeit)<br><span style="color:var(--text-dim); font-size:13.5px;">Il diritto di votare sui temi</span></p>
+<p style="margin:0 0 12px;"><b>Wahlrecht</b><br>Kandidaten wählen oder sich selbst in ein Amt wählen lassen<br><span style="color:var(--text-dim); font-size:13.5px;">Eleggere e farsi eleggere</span></p>
+`},
 
 {id:"finale", n:"F", t:"Foglio finale (29 e 30 ottobre)", html:`
 <h2>Foglio finale</h2>
@@ -2756,6 +2785,16 @@ const BOOK = [
 <li><b>Date:</b> 1291 · 1356 · 1460 · 1471 · 1501 · 1833 · 1848 · 1971.</li>
 <li><b>Vogel Gryff:</b> Löwe (Rebhaus), Wilder Mann (Haeren), Vogel Gryff (Greifen).</li>
 </ol>
+<p><b>Dal libretto ufficiale:</b></p>
+<ul>
+<li><b>Demokratischer Bundesstaat</b> · direkte Demokratie · <b>nicht in der EU</b>.</li>
+<li><b>26 Kantone = 20 Voll + 6 Halb</b> (BS, BL, AR, AI, NW, OW).</li>
+<li><b>CH</b> 41'285 km², ca. 8,9 Mio · <b>BS</b> 37 km², ca. 206'100 · Basel = 3. grösste Stadt.</li>
+<li><b>Gemeinde = Einwohner- + Bürgergemeinde</b>; in Basel macht der Kanton die Aufgaben der Einwohnergemeinde.</li>
+<li><b>Appellationsgericht</b> = höchste Instanz im Kanton.</li>
+<li><b>Regierungsrat vollamtlich</b>; Grosser Rat, Bürgergemeinderat, Bürgerrat nebenamtlich.</li>
+<li><b>Aktives und passives Wahlrecht</b> · 1. August Nationalfeiertag · bis 1815 heutiges Gebiet.</li>
+</ul>
 <p>All'esame: respira, rispondi corto, e se non ricordi un dettaglio dillo con calma – è una conversazione, non un interrogatorio. <b>Viel Glück!</b></p>`}
 ];
 
@@ -2812,7 +2851,24 @@ const SIM_QS = [
   ["Was ist der Vogel Gryff?","Fest der 3 Kleinbasler Ehrengesellschaften im Januar: Löwe, Wilder Mann, Vogel Gryff."],
   ["Welche ist die älteste Messe der Schweiz?","Die Basler Herbstmesse, seit 1471."],
   ["Was geschah 1356 und 1460 in Basel?","Erdbeben; Gründung der Universität."],
-  ["1291, 1501, 1833, 1848, 1971?","Gründung Schweiz; Basel tritt bei; Kantonstrennung; Bundesverfassung; Frauenstimmrecht."]
+  ["1291, 1501, 1833, 1848, 1971?","Gründung Schweiz; Basel tritt bei; Kantonstrennung; Bundesverfassung; Frauenstimmrecht."],
+  ["Welche Staatsform hat die Schweiz?","Demokratischer Bundesstaat mit direkter Demokratie."],
+  ["Welche politischen Rechte hat das Volk?","Aktives und passives Wahlrecht, Stimmrecht zu Initiativen und Referenden, Petitionsrecht."],
+  ["Was ist aktives und passives Wahlrecht?","Aktiv: wählen. Passiv: sich wählen lassen."],
+  ["Ist die Schweiz Mitglied der EU?","Nein. Sie liegt im Zentrum von Mitteleuropa."],
+  ["Wie viele Kantone hat die Schweiz?","26: 20 Vollkantone und 6 Halbkantone."],
+  ["Welche sind die Halbkantone?","Basel-Stadt, Basel-Landschaft, Appenzell Ausserrhoden, Appenzell Innerrhoden, Nidwalden, Obwalden."],
+  ["Wie gross ist die Schweiz? Wie viele Einwohner?","41'285 km², ca. 8,9 Millionen."],
+  ["Wie viele Einwohner hat Basel-Stadt?","Ca. 206'100: Stadt Basel 182'400, Riehen 22'500, Bettingen 1'200. Fläche 37 km²."],
+  ["Welche ist die drittgrösste Stadt der Schweiz?","Basel, nach Zürich und Genf."],
+  ["Woraus besteht jede Gemeinde?","Aus Einwohnergemeinde und Bürgergemeinde. In Basel übernimmt der Kanton die Aufgaben der Einwohnergemeinde."],
+  ["Welches ist die höchste Instanz im Kanton?","Das Appellationsgericht. 1. Instanz: Zivil-, Straf-, Sozialversicherungsgericht."],
+  ["Wer arbeitet vollamtlich, wer nebenamtlich?","Regierungsrat vollamtlich; Grosser Rat, Bürgergemeinderat und Bürgerrat nebenamtlich."],
+  ["Was geschah bis 1815?","Die Eidgenossenschaft wurde auf das heutige Gebiet erweitert."],
+  ["Was ist die Bürgergemeinde?","Ein modernes Dienstleistungsunternehmen mit sozialen und gemeinnützigen Aufgaben für Bürger und Einwohner."],
+  ["Woher kommt das Wort Ständerat?","Die Kantone hiessen früher «Stände»."],
+  ["Worüber stimmt man ab?","Über Verfassungsänderungen, Gesetzesänderungen und Staatsverträge."],
+  ["Wo ist der Hauptsitz des Bundesgerichts?","In Lausanne. Abteilungen in Luzern, St. Gallen und Bellinzona."]
 ];
 
 /* ---------- Stato (localStorage + sync Supabase) ---------- */
@@ -2882,7 +2938,7 @@ function renderPlan(){
     const b = BOOK.find(x=>x.id===bid);
     if(b) html += '<button class="ghost" onclick="openBook(\''+bid+'\')">'+(b.n==="F"?"Foglio finale":"Blocco "+b.n)+'</button>';
   });
-  const simLbl = {"1-20":"Simulazione 1–20","21-40":"Simulazione 21–40","all":"Simulazione completa","pers":"Domande personali"};
+  const simLbl = {"1-20":"Simulazione 1–20","21-40":"Simulazione 21–40","all":"Simulazione completa","pers":"Domande personali","lib":"Domande libretto 41–57"};
   if(day.sim) html += '<button class="secondary" onclick="startSim(\''+day.sim+'\')">'+simLbl[day.sim]+'</button>';
   if(day.sim2) html += '<button class="ghost" onclick="startSim(\''+day.sim2+'\')">'+simLbl[day.sim2]+'</button>';
   if(day.red) html += '<button class="ghost" onclick="startSim(\'red\')">Carte rosse ('+Object.keys(p.red).length+')</button>';
@@ -2979,7 +3035,8 @@ function startSim(mode){
   const p = loadPlan();
   if(mode==="1-20") simQueue = Array.from({length:20},(_,i)=>"s"+(i+1));
   else if(mode==="21-40") simQueue = Array.from({length:20},(_,i)=>"s"+(i+21));
-  else if(mode==="all") simQueue = Array.from({length:40},(_,i)=>"s"+(i+1));
+  else if(mode==="all") simQueue = Array.from({length:SIM_QS.length},(_,i)=>"s"+(i+1));
+  else if(mode==="lib") simQueue = Array.from({length:SIM_QS.length-40},(_,i)=>"s"+(i+41));
   else if(mode==="pers") simQueue = PERSONAL_QS.map((_,k)=>"p"+k);
   else simQueue = shuffle(Object.keys(p.red));
   simPos = 0; simOk = 0; simShown = false;
